@@ -2,9 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
-const authRoutes = require('./routes/authRoutes');
 // Middlewares
 app.use(cors());
 app.use(express.json());
