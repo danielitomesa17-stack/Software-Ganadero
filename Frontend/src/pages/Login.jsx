@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
-// 1. Usamos axios nativo para saltar interceptores que congelen la app
-import axios from 'axios'; 
+// Reconectamos tu instancia personalizada con la seguridad del interceptor reparado
+import api from '../axios/axios'; 
 
 const Login = ({ onLogin }) => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -19,22 +19,25 @@ const Login = ({ onLogin }) => {
     setCargando(true);
 
     try {
-      // 2. Apuntamos directo a la URL de Render para asegurar que el 401 caiga en el catch
-      const response = await axios.post('https://software-ganadero.onrender.com/api/login', credenciales);
+      // Usamos la instancia centralizada. El '/login' se acopla a tu URL de Render
+      const response = await api.post('/login', credenciales);
 
-      // Axios guarda la respuesta del servidor directamente en la propiedad 'data'
-      if (response.data) {
+      // ⚠️ VALIDACIÓN CLAVE: Solo iniciamos sesión si el backend confirma el éxito
+      if (response.data && response.data.success) {
         onLogin(response.data);
+      } else {
+        // Manejo alternativo en caso de que devuelva datos pero success sea false
+        setError(response.data.message || 'Credenciales de acceso incorrectas');
       }
     } catch (err) {
-      // Capturamos los errores devueltos por el backend en Render (como el 401)
+      // Al reparar el interceptor en axios.js, el error 401 cae limpiamente aquí
       if (err.response && err.response.data) {
         setError(err.response.data.message || 'Credenciales de acceso incorrectas');
       } else {
         setError('Error de conexión con el servidor de la Hacienda');
       }
     } finally {
-      // Este bloque siempre se ejecuta, liberando el botón "Entrando..." pase lo que pase
+      // Este bloque se ejecuta SIEMPRE al terminar la petición, destrabando el botón
       setCargando(false);
     }
   };
