@@ -2,7 +2,8 @@ import connection from '../config/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-exports.login = async (req, res) => {
+// Cambiado 'exports.login' por 'export const login'
+export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -22,14 +23,14 @@ exports.login = async (req, res) => {
 
             const usuario = results[0];
 
-            // 3. COMPARACIÓN CORRECTA: Comparamos texto plano contra el Hash de la BD
+            // 3. COMPARACIÓN: Comparamos texto plano contra el Hash de la BD
             const coinciden = await bcrypt.compare(password, usuario.password);
 
             if (!coinciden) {
                 return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
             }
 
-            // 4. Generar el Token JWT (Usando la clave secreta que tienes en tu .env)
+            // 4. Generar el Token JWT
             const token = jwt.sign(
                 { id: usuario.id, rol: usuario.rol },
                 process.env.JWT_SECRET,
