@@ -1,57 +1,53 @@
-import connection from '../config/db.js'; 
+import pool from '../config/db.js'; // Importación limpia del pool de promesas
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-export const login = (req, res) => {
+export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
         const query = 'SELECT * FROM usuarios WHERE email = ?';
         
-        // Usamos .query tradicional (sin promesas cruzadas)
-        connection.query(query, [email], (err, results) => {
-            if (err) {
-                console.error("❌ Error en BD:", err);
-                return res.status(500).json({ success: false, error: 'Error en la base de datos.' });
+        // 1. En mysql2/promise, await devuelve un array donde el primer elemento [rows] son los registros
+        const [rows] = await pool.query(query, [email]);
+
+        // 2. Verificar si el usuario existe en el resultado desestructurado
+        if (!rows || rows.length === 0) {
+            return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
+        }
+
+        const usuario = rows[0];
+
+        // 3. Comparar la contraseña de forma asíncrona usando await con bcryptjs
+        const coinciden = await bcrypt.compare(password, usuario.password);
+
+        if (!coinciden) {
+            return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
+        }
+
+        // 4. Generar el Token JWT usando tu variable de entorno
+        const token = jwt.sign(
+            { id: usuario.id, rol: usuario.rol },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // 5. Enviar la respuesta de éxito inmediata al Frontend
+        return res.status(200).json({
+            success: true,
+            message: '¡Ingreso exitoso!',
+            token,
+            user: {
+                id: usuario.id,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                rol: usuario.rol
             }
-
-            // Verificar si el usuario existe
-            if (!results || results.length === 0) {
-                return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
-            }
-
-            const usuario = results[0];
-
-            // Sincrónico para evitar que el hilo asíncrono se quede colgado si bcrypt falla
-            const coinciden = bcrypt.compareSync(password, usuario.password);
-
-            if (!coinciden) {
-                return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
-            }
-
-            // Generar el Token JWT
-            const token = jwt.sign(
-                { id: usuario.id, rol: usuario.rol },
-                process.env.JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-
-            // Responder con éxito de inmediato
-            return res.status(200).json({
-                success: true,
-                message: '¡Ingreso exitoso!',
-                token,
-                user: {
-                    id: usuario.id,
-                    nombre: usuario.nombre,
-                    email: usuario.email,
-                    rol: usuario.rol
-                }
-            });
         });
 
     } catch (error) {
-        console.error("❌ Error general en login:", error);
-        return res.status(500).json({ success: false, error: 'Error interno del servidor.' });
+        // Cualquier fallo de conexión con Aiven caerá aquí de inmediato
+        console.error("❌ Error crítico en el proceso de Login:", error);
+        return res.status(500).json({ success: false, error: 'Error interno del servidor al procesar el ingreso.' });
     }
 };
