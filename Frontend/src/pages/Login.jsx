@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
-// Reconectamos tu instancia personalizada con la seguridad del interceptor reparado
-import api from '../axios/axios'; 
+// ⚠️ 1. Importamos Axios directo de la librería para saltarnos interceptores rotos
+import axios from 'axios'; 
 
 const Login = ({ onLogin }) => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -19,25 +19,27 @@ const Login = ({ onLogin }) => {
     setCargando(true);
 
     try {
-      // Usamos la instancia centralizada. El '/login' se acopla a tu URL de Render
-      const response = await api.post('/login', credenciales);
+      // ⚠️ 2. Petición directa con URL absoluta a Render
+      const response = await axios.post('https://software-ganadero.onrender.com/api/login', credenciales);
 
-      // ⚠️ VALIDACIÓN CLAVE: Solo iniciamos sesión si el backend confirma el éxito
+      // 3. Validación estricta de éxito
       if (response.data && response.data.success) {
         onLogin(response.data);
       } else {
-        // Manejo alternativo en caso de que devuelva datos pero success sea false
-        setError(response.data.message || 'Credenciales de acceso incorrectas');
+        setError(response.data?.message || 'Credenciales de acceso incorrectas');
       }
+
     } catch (err) {
-      // Al reparar el interceptor en axios.js, el error 401 cae limpiamente aquí
+      console.log("El error cayó correctamente en el catch del componente:", err);
+      
+      // 4. Captura ultra segura del error 401
       if (err.response && err.response.data) {
         setError(err.response.data.message || 'Credenciales de acceso incorrectas');
       } else {
         setError('Error de conexión con el servidor de la Hacienda');
       }
     } finally {
-      // Este bloque se ejecuta SIEMPRE al terminar la petición, destrabando el botón
+      // 🚀 ESTO SE EJECUTARÁ SÍ O SÍ porque el axios nativo garantiza el cierre del ciclo
       setCargando(false);
     }
   };
@@ -47,21 +49,13 @@ const Login = ({ onLogin }) => {
       className="min-h-screen flex items-center justify-center p-4 font-sans relative bg-cover bg-center" 
       style={{ backgroundImage: "url('/Logo.svg')" }}
     >
-      
-      {/* Overlay oscuro para legibilidad (Capa de contraste) */}
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
 
-      {/* Tarjeta Glassmorphism */}
       <div className="w-full max-w-md bg-white/70 backdrop-blur-md rounded-[2.5rem] shadow-2xl p-8 md:p-12 z-10 border border-white/40">
         
-        {/* Encabezado con Logo */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mx-auto mb-6 drop-shadow-lg rotate-3 transition-transform hover:rotate-0 duration-500">
-             <img 
-                src="/Logo.svg" 
-                alt="Logo.svg" 
-                className="w-24 h-24 object-contain" 
-             />
+             <img src="/Logo.svg" alt="Logo" className="w-24 h-24 object-contain" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
             Software <span className="text-green-700">Ganadero</span>
@@ -71,7 +65,6 @@ const Login = ({ onLogin }) => {
           </p>
         </div>
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-widest ml-1">
@@ -109,7 +102,6 @@ const Login = ({ onLogin }) => {
             </div>
           </div>
 
-          {/* Alerta de Error */}
           {error && (
             <div className="flex items-center gap-3 bg-red-100/80 border border-red-200 text-red-700 p-4 rounded-2xl text-xs font-bold animate-in fade-in slide-in-from-top-2">
               <AlertCircle size={18} />
