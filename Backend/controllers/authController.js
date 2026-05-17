@@ -1,8 +1,8 @@
-const connection = require('../config/db.js'); // Ajusta la ruta a tu archivo de conexión si es necesario
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import connection from '../config/db.js'; 
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-export const login= async (req, res) => {
+exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
