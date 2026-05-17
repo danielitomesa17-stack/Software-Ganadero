@@ -15,7 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({ sidebarOpen }) => {
   const location = useLocation();
 
   // --- LÓGICA DE ALERTAS SANITARIAS (CONTADOR ROJO) ---

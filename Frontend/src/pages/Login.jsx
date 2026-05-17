@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
+// IMPORTANTE: Ajusta esta ruta según dónde guardaste tu archivo axios.js
+// Si está en 'src/axios/axios.js', la ruta relativa desde 'src/components/' suele ser:
+import api from '../axios/axios'; 
 
 const Login = ({ onLogin }) => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -17,21 +20,20 @@ const Login = ({ onLogin }) => {
     setCargando(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credenciales),
-      });
+      // Usamos nuestra instancia de Axios. El '/login' se sumará a la URL de Render automáticamente.
+      const response = await api.post('/login', credenciales);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        onLogin(data);
-      } else {
-        setError(data.message || 'Credenciales de acceso incorrectas');
+      // Axios guarda la respuesta del servidor directamente en la propiedad 'data'
+      if (response.data) {
+        onLogin(response.data);
       }
-    } catch {
-      setError('Error de conexión con el servidor de la Hacienda');
+    } catch (err) {
+      // Capturamos los errores devueltos por el backend en Render
+      if (err.response && err.response.data) {
+        setError(err.response.data.message || 'Credenciales de acceso incorrectas');
+      } else {
+        setError('Error de conexión con el servidor de la Hacienda');
+      }
     } finally {
       setCargando(false);
     }
