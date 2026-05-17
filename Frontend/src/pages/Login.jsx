@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
-import api from '../axios/axios'; 
+// 1. Usamos axios nativo para saltar interceptores que congelen la app
+import axios from 'axios'; 
 
 const Login = ({ onLogin }) => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -18,21 +19,22 @@ const Login = ({ onLogin }) => {
     setCargando(true);
 
     try {
-      // Usamos nuestra instancia de Axios. El '/login' se sumará a la URL de Render automáticamente.
-      const response = await api.post('/login', credenciales);
+      // 2. Apuntamos directo a la URL de Render para asegurar que el 401 caiga en el catch
+      const response = await axios.post('https://software-ganadero.onrender.com/api/login', credenciales);
 
       // Axios guarda la respuesta del servidor directamente en la propiedad 'data'
       if (response.data) {
         onLogin(response.data);
       }
     } catch (err) {
-      // Capturamos los errores devueltos por el backend en Render
+      // Capturamos los errores devueltos por el backend en Render (como el 401)
       if (err.response && err.response.data) {
         setError(err.response.data.message || 'Credenciales de acceso incorrectas');
       } else {
         setError('Error de conexión con el servidor de la Hacienda');
       }
     } finally {
+      // Este bloque siempre se ejecuta, liberando el botón "Entrando..." pase lo que pase
       setCargando(false);
     }
   };
@@ -40,7 +42,7 @@ const Login = ({ onLogin }) => {
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4 font-sans relative bg-cover bg-center" 
-      style={{ backgroundImage: "url('/Logo.svg')" }} // Asegúrate de que esta foto esté en la carpeta /public
+      style={{ backgroundImage: "url('/Logo.svg')" }}
     >
       
       {/* Overlay oscuro para legibilidad (Capa de contraste) */}
