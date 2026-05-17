@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/animales', animalRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api', authRoutes);
 // Manejo de errores global
 // Al poner _next evitas el error de "defined but never used"
 app.use((err, req, res, _next) => {
