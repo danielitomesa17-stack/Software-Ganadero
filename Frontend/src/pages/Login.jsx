@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
-// IMPORTANTE: Ajusta esta ruta según dónde guardaste tu archivo axios.js
-// Si está en 'src/axios/axios.js', la ruta relativa desde 'src/components/' suele ser:
 import api from '../axios/axios'; 
 
 const Login = ({ onLogin }) => {
