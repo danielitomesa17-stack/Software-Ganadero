@@ -29,95 +29,75 @@ const InventarioLista = () => {
     : 'https://software-ganadero.onrender.com/api/animales';
 
   // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
+  const getToken = () => {
+    const sesion = localStorage.getItem('danubio_session');
+    return sesion ? JSON.parse(sesion).token : null;
+  };
   const cargarAnimales = useCallback(async () => {
+    const token = getToken();
+    if (!token) { setCargando(false); return; }
     try {
       setCargando(true);
-      const token = localStorage.getItem('token');
-      
-      // 🔒 Enviamos la petición limpia a URL_BASE, eliminando los viejos Query Params (?hacienda_id=...)
       const res = await fetch(URL_BASE, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       
-      if (!res.ok) throw new Error(`Error servidor: ${res.status}`);
+      if (!res.ok) throw new Error(`Error ${res.status}`);
       const datos = await res.json();
       
       // Mapeo seguro adaptado al esquema real de tu Base de Datos en Aiven
-      const datosAdaptados = datos.map(a => ({
+      setAnimales(datos.map(a => ({
         id: a.id,
-        chapeta: a.caravana_id || 'SIN CAP', 
+        chapeta: a.caravana_id || 'SIN CAP',
         raza: a.raza || 'Brahman',
-        pesoInicial: a.peso_inicial ? Number(a.peso_inicial) : 0,
-        pesoActual: a.peso_actual ? Number(a.peso_actual) : (a.peso_inicial ? Number(a.peso_inicial) : 0),
+        pesoInicial: Number(a.peso_inicial) || 0,
+        pesoActual: Number(a.peso_actual) || Number(a.peso_inicial) || 0,
         potrero: a.lote || 'General', 
         sexo: a.sexo || 'Hembra',
         estado: a.estado || 'Sano',
         historial: typeof a.historial === 'string' ? JSON.parse(a.historial) : (a.historial || [])
-      }));
-      
-      setAnimales(datosAdaptados);
+      })));
     } catch (error) {
-      console.error("Error al cargar el inventario SaaS:", error);
+      console.error("Error al cargar:", error);
     } finally {
       setCargando(false); 
     }
   }, [URL_BASE]);
 
-  useEffect(() => {
-    cargarAnimales();
-  }, [cargarAnimales]);
-
+  useEffect(() => { cargarAnimales(); }, [cargarAnimales]);
   // 2. REGISTRAR ANIMAL 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    if (!formData.chapeta) return alert("Chapeta obligatoria");
-
-    const nuevoAnimal = {
-      caravana_id: formData.chapeta.toUpperCase(),
-      peso_inicial: Number(formData.peso),
-      lote: formData.potrero,
-      raza: formData.raza,
-      sexo: formData.sexo,
-      estado: formData.estado
-    };
-
+    const token = getToken();
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(URL_BASE, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(nuevoAnimal)
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          caravana_id: formData.chapeta.toUpperCase(),
+          peso_inicial: Number(formData.peso),
+          lote: formData.potrero,
+          raza: formData.raza,
+          sexo: formData.sexo,
+          estado: formData.estado
+        })
       });
       if (res.ok) {
         await cargarAnimales();
         setIsModalOpen(false);
         setFormData(estadoInicial);
-      } else {
-        alert("Error al guardar el animal en el servidor");
       }
-    } catch {
-      alert("Error de conexión al guardar");
-    }
+    } catch { alert("Error de conexión"); }
   };
 
-  // 3. ACTUALIZAR ANIMAL / PESAJE
-  const handleActualizar = async (e) => {
+    const handleActualizar = async (e) => {
     e.preventDefault();
+    const token = getToken();
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`${URL_BASE}/${editingAnimal.id}`, {
         method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
           estado: editingAnimal.estado,
@@ -127,29 +107,17 @@ const InventarioLista = () => {
       if (res.ok) {
         await cargarAnimales();
         setEditingAnimal(null);
-      } else {
-        alert("Error al actualizar el pesaje");
       }
-    } catch {
-      alert("Error al actualizar");
-    }
+    } catch { alert("Error al actualizar"); }
   };
 
-  // 4. ELIMINAR ANIMAL
   const eliminarAnimal = async (id) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este registro bovino? En producción esto alterará los reportes.")) return;
+    if (!window.confirm("¿Eliminar este registro?")) return;
+    const token = getToken();
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${URL_BASE}/${id}`, { 
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (res.ok) await cargarAnimales();
-    } catch {
-      alert("Error al eliminar");
-    }
+      await fetch(`${URL_BASE}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      await cargarAnimales();
+    } catch { alert("Error al eliminar"); }
   };
 
   const filtrados = useMemo(() => {
@@ -159,11 +127,7 @@ const InventarioLista = () => {
     );
   }, [animales, busqueda]);
 
-  if (cargando) return (
-    <div className="flex items-center justify-center min-h-[60vh] bg-slate-50 font-black uppercase text-slate-400 animate-pulse text-xs tracking-widest">
-      Sincronizando hato con la base de datos...
-    </div>
-  );
+  if (cargando) return <div className="p-10 text-center uppercase font-black text-slate-400">Sincronizando...</div>;
 
   return (
     <div className="p-1 bg-[#F8FAFC] min-h-screen font-sans text-slate-900">
@@ -185,7 +149,7 @@ const InventarioLista = () => {
       </div>
 
       {/* BUSCADOR */}
-      <div className="relative mb-8">
+      <div className="p-1 bg-[#F8FAFC] min-h-screen">
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input 
           type="text" placeholder="Buscar por número de chapeta o raza..." 
