@@ -23,46 +23,57 @@ const InventarioLista = () => {
 
   const [formData, setFormData] = useState(estadoInicial);
 
-  // 1. OBTENER ANIMALES (Ajustado para SaaS con Token)
+  // 🌐 Configuración dinámica de la URL base
+  const URL_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api/animales'
+    : 'https://software-ganadero.onrender.com/api/animales';
+
+  // 1. OBTENER ANIMALES
   const cargarAnimales = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token'); // 🔒 Recuperamos el token seguro
+      const token = localStorage.getItem('token');
+      // Recuperamos el ID de la hacienda que se guardó al iniciar sesión (Por defecto 1 para pruebas)
+      const haciendaId = localStorage.getItem('hacienda_id') || '1'; 
       
-      // Llamado limpio a tu API (Render o Local, usa la ruta relativa o variable de entorno)
-      const res = await fetch('http://localhost:3000/api/animales', {
+      // Construimos la URL con el Query Parameter que el backend solicita
+      const urlConParametro = `${URL_BASE}?hacienda_id=${haciendaId}`;
+      
+      const res = await fetch(urlConParametro, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}` // 👈 Pasaporte obligatorio
+          'Authorization': `Bearer ${token}`
         }
       });
       
-      if (!res.ok) throw new Error("Error servidor");
+      if (!res.ok) throw new Error(`Error servidor: ${res.status}`);
       const datos = await res.json();
       
+      // Mapeo seguro adaptado al esquema real de tu Base de Datos en Aiven
       const datosAdaptados = datos.map(a => ({
         id: a.id,
-        chapeta: a.caravana_id || a.chapeta, 
+        chapeta: a.caravana_id || 'SIN CAP', 
         raza: a.raza || 'Brahman',
-        pesoInicial: a.peso_inicial,
-        pesoActual: a.peso_actual || a.peso_inicial,
-        potrero: a.lote, 
-        sexo: a.sexo,
-        estado: a.estado,
+        pesoInicial: a.peso_inicial ? Number(a.peso_inicial) : 0,
+        pesoActual: a.peso_actual ? Number(a.peso_actual) : (a.peso_inicial ? Number(a.peso_inicial) : 0),
+        potrero: a.lote || 'General', 
+        sexo: a.sexo || 'Hembra',
+        estado: a.estado || 'Sano',
         historial: typeof a.historial === 'string' ? JSON.parse(a.historial) : (a.historial || [])
       }));
+      
       setAnimales(datosAdaptados);
     } catch (error) {
       console.error("Error al cargar el inventario SaaS:", error);
     } finally {
-      setCargando(false);
+      setCargando(false); // Rompe el esqueleto de carga pase lo que pase
     }
-  }, []);
+  }, [URL_BASE]);
 
   useEffect(() => {
     cargarAnimales();
   }, [cargarAnimales]);
 
-  // 2. REGISTRAR ANIMAL (El backend inyecta la Hacienda automáticamente)
+  // 2. REGISTRAR ANIMAL 
   const handleGuardar = async (e) => {
     e.preventDefault();
     if (!formData.chapeta) return alert("Chapeta obligatoria");
@@ -74,16 +85,15 @@ const InventarioLista = () => {
       raza: formData.raza,
       sexo: formData.sexo,
       estado: formData.estado
-      // 🔒 Ya no enviamos hacienda_id en el body, el backend lo sabe por tu Token
     };
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3000/api/animales', {
+      const res = await fetch(URL_BASE, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(nuevoAnimal)
       });
@@ -93,7 +103,7 @@ const InventarioLista = () => {
         setFormData(estadoInicial);
       }
     } catch {
-      alert("Error de conexión");
+      alert("Error de conexión al guardar");
     }
   };
 
@@ -102,11 +112,11 @@ const InventarioLista = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3000/api/animales/${editingAnimal.id}`, {
+      const res = await fetch(`${URL_BASE}/${editingAnimal.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
@@ -128,10 +138,10 @@ const InventarioLista = () => {
     if (!window.confirm("¿Eliminar registro?")) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:3000/api/animales/${id}`, { 
+      const res = await fetch(`${URL_BASE}/${id}`, { 
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+          'Authorization': `Bearer ${token}`
         }
       });
       if (res.ok) await cargarAnimales();

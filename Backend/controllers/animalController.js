@@ -2,15 +2,20 @@ import db from '../config/db.js';
 
 // 1. Obtener animales de la hacienda en sesión (Read)
 export const getAnimales = async (req, res) => {
-    // 🔒 Extraído de forma segura desde el Token JWT por el middleware
-    const { haciendaId } = req.user; 
-
     try {
-        // Filtro SaaS estricto usando la columna exacta 'Hacienda_id'
+        // 🔒 Validación defensiva: Verificar que el middleware inyectó el usuario
+        if (!req.user || !req.user.haciendaId) {
+            return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+        }
+
+        const { haciendaId } = req.user; 
+
+        // 🚨 CORREGIDO: Se cambió 'hacienda_id' por 'Hacienda_id' para que coincida con tu MySQL Workbench
         const [results] = await db.query(
-            "SELECT * FROM animales WHERE hacienda_id = ? ORDER BY id DESC", 
+            "SELECT * FROM animales WHERE Hacienda_id = ? ORDER BY id DESC", 
             [haciendaId]
         );
+        
         res.json(results);
     } catch (err) {
         res.status(500).json({ error: "Error al obtener animales", detalle: err.message });
@@ -19,23 +24,28 @@ export const getAnimales = async (req, res) => {
 
 // 2. Registrar animal amarrado a la hacienda en sesión (Create)
 export const registrarAnimal = async (req, res) => {
+    if (!req.user || !req.user.haciendaId) {
+        return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+    }
+
     const { haciendaId } = req.user; // 🔒 Inyección SaaS automática y segura
     const { caravana_id, peso_inicial, lote, raza, sexo, estado } = req.body;
 
     try {
+        // Estructura limpia para el historial de pesajes
         const historialInicial = JSON.stringify([
-            { fecha: new Date().toLocaleDateString('es-CO'), peso: peso_inicial }
+            { fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_inicial) }
         ]);
 
-        // Query corregido con la H mayúscula en 'Hacienda_id'
+        // Query configurado con la H mayúscula en 'Hacienda_id'
         const sql = `INSERT INTO animales 
             (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, Hacienda_id, historial) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const [result] = await db.query(sql, [
             caravana_id, 
-            peso_inicial, 
-            peso_inicial, 
+            Number(peso_inicial), 
+            Number(peso_inicial), 
             lote, 
             raza, 
             sexo, 
@@ -52,6 +62,10 @@ export const registrarAnimal = async (req, res) => {
 
 // 3. Actualizar Animal / Pesaje validando propiedad (Update)
 export const actualizarAnimal = async (req, res) => {
+    if (!req.user || !req.user.haciendaId) {
+        return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+    }
+
     const { haciendaId } = req.user; // 🔒 Filtro de pertenencia
     const { id } = req.params;
     const { peso_actual, estado, lote } = req.body;
@@ -64,12 +78,21 @@ export const actualizarAnimal = async (req, res) => {
         );
         if (results.length === 0) return res.status(404).json({ error: "Animal no encontrado en tu hacienda" });
 
-        let historial = JSON.parse(results[0].historial || "[]");
-        historial.push({ fecha: new Date().toLocaleDateString('es-CO'), peso: peso_actual });
+        // Procesamiento seguro del historial JSON
+        let historial = [];
+        try {
+            historial = typeof results[0].historial === 'string' 
+                ? JSON.parse(results[0].historial || "[]") 
+                : (results[0].historial || []);
+        } catch (e) {
+            historial = [];
+        }
 
-        // Actualizamos aplicando el doble candado (id y Hacienda_id)
+        historial.push({ fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_actual) });
+
+        // Actualizamos aplicando el doble candado de seguridad (id y Hacienda_id)
         const sql = "UPDATE animales SET peso_actual = ?, estado = ?, lote = ?, historial = ? WHERE id = ? AND Hacienda_id = ?";
-        await db.query(sql, [peso_actual, estado, lote, JSON.stringify(historial), id, haciendaId]);
+        await db.query(sql, [Number(peso_actual), estado, lote, JSON.stringify(historial), id, haciendaId]);
         
         res.json({ message: "Pesaje actualizado correctamente" });
     } catch (err) {
@@ -79,11 +102,15 @@ export const actualizarAnimal = async (req, res) => {
 
 // 4. Eliminar Animal validando propiedad (Delete)
 export const eliminarAnimal = async (req, res) => {
+    if (!req.user || !req.user.haciendaId) {
+        return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+    }
+
     const { haciendaId } = req.user; // 🔒 Filtro de pertenencia
     const { id } = req.params;
     
     try {
-        // Evita que un usuario borre animales de otra finca adivinando el ID en la URL
+        // Evita que un usuario borre animales de otra finca alterando el ID en la URL
         const [result] = await db.query(
             "DELETE FROM animales WHERE id = ? AND Hacienda_id = ?", 
             [id, haciendaId]
