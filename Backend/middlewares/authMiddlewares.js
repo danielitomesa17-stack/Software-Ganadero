@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const verificarToken = (req, res, next) => {
+export const verificarToken = (req, res, next) => {
     let token = req.headers.authorization;
 
     if (!token || !token.startsWith('Bearer ')) {
@@ -11,14 +11,17 @@ const verificarToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        
+        // 🔒 Aquí ya viajan de forma segura: decoded.id, decoded.rol y decoded.haciendaId
+        req.user = decoded; 
+        
         next();
     } catch (error) {
         return res.status(401).json({ success: false, error: 'Token inválido o expirado.' });
     }
 };
 
-const autorizarRoles = (...rolesPermitidos) => {
+export const autorizarRoles = (...rolesPermitidos) => {
     return (req, res, next) => {
         if (!req.user || !rolesPermitidos.includes(req.user.rol)) {
             return res.status(403).json({
@@ -29,5 +32,3 @@ const autorizarRoles = (...rolesPermitidos) => {
         next();
     };
 };
-
-module.exports = { verificarToken, autorizarRoles };
