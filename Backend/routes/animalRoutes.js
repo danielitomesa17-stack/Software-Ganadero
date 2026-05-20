@@ -5,7 +5,7 @@ import {
     actualizarAnimal, 
     eliminarAnimal 
 } from '../controllers/animalController.js'; // 💡 Recuerda el .js en producción
-import { verificarToken, autorizarRoles } from '../middlewares/authMiddleware.js'; // 💡 Recuerda el .js en producción
+import { verificarToken, autorizarRoles } from '../middlewares/authMiddlewares.js'; // 💡 Recuerda el .js en producción
 
 const router = express.Router();
 
