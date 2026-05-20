@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Milk, Menu, LogOut, 
   ChevronRight, ShieldCheck, Pill, BarChart3 
 } from 'lucide-react';
 
-// src/routes/AppRouter.jsx
-
+// 📂 Importaciones de Páginas y Componentes
 import Login from '../pages/Login'; 
 import InventarioLista from '../pages/InventarioLista'; 
 import ProduccionSistemas from '../pages/ProduccionSistemas'; 
@@ -15,12 +14,14 @@ import MedicamentosInventario from '../pages/MedicamentosInventario';
 import ReportesSistemas from '../pages/ReportesSistemas'; 
 import GastosSistemas from '../pages/GastosSistemas';
 
+// 📋 CONTENIDO INTERNO DE LA APLICACIÓN (Con Sidebar y Header)
 const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
   const [alertasSanitarias, setAlertasSanitarias] = useState(0);
 
+  // Calcular recordatorios de dosis de sanidad pendientes
   useEffect(() => {
     const calcularAlertas = () => {
       try {
@@ -38,13 +39,16 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
     }
   }, [location, sesion]);
 
+  // Redirección de seguridad si la sesión no es válida o caducó
   if (!sesion) return <Navigate to="/login" replace />;
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
       
-      {/* SIDEBAR IZQUIERDO */}
+      {/* 1. SIDEBAR NAVIGATION */}
       <aside className={`${sidebarOpen ? 'w-72' : 'w-24'} bg-[#0F172A] p-6 flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl`}>
+        
+        {/* Identificador de la Finca */}
         <div className="flex items-center gap-4 px-2 mb-12">
           <div className="min-w-[45px] h-[45px] bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-green-900/40 font-black text-xl">
             {sesion.nombre_hacienda?.substring(0, 2).toUpperCase() || 'HD'}
@@ -57,6 +61,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           )}
         </div>
 
+        {/* Módulos Operativos */}
         <nav className="flex-1 space-y-3">
           <Link to="/app/inventario" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${isActive('/app/inventario') ? 'bg-green-600 text-white shadow-xl shadow-green-900/20' : 'text-slate-400 hover:bg-slate-800/50 hover:text-green-400'}`}>
             <LayoutDashboard size={22} strokeWidth={isActive('/app/inventario') ? 3 : 2} />
@@ -85,6 +90,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           </Link>
         </nav>
 
+        {/* Desconexión segura */}
         <button 
           onClick={onLogout}
           className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800/50 pt-6 transition-colors w-full"
@@ -94,7 +100,10 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
         </button>
       </aside>
 
+      {/* 2. AREA PRINCIPAL DE CONTENIDO */}
       <main className="flex-1 flex flex-col overflow-hidden">
+        
+        {/* CONTROL SUPERIOR BAR */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-600 transition-all active:scale-90">
@@ -107,6 +116,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             </div>
           </div>
           
+          {/* Perfil del Operador */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-4 border-l pl-6 border-slate-100">
               <div className="text-right hidden sm:block">
@@ -120,10 +130,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           </div>
         </header>
 
+        {/* INYECCIÓN DINÁMICA DE SUBRUTAS DEL DASHBOARD */}
         <div className="flex-1 overflow-y-auto p-8 lg:p-12">
           <div className="max-w-7xl mx-auto">
             <Routes>
-              <Route path="inventario" element={<InventarioLista haciendaId={sesion.hacienda_id} />} />
+              <Route path="inventario" element={<InventarioLista />} />
               <Route path="reportes" element={<ReportesSistemas />} />
               <Route path="produccion" element={<ProduccionSistemas />} />
               <Route path="sanidad" element={<SanidadSistemas />} />
@@ -138,38 +149,53 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
   );
 };
 
+// 🗺️ ENRUTADOR GLOBAL Y MANEJO DE ESTADO DE AUTENTICACIÓN
 const AppRouter = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   
+  // Inicialización síncrona y segura de la sesión desde el LocalStorage
   const [sesion, setSesion] = useState(() => {
     const guardada = localStorage.getItem('danubio_session');
     if (!guardada) return null;
     try { 
       const parsed = JSON.parse(guardada);
-      return parsed.nombre ? parsed : null; 
+      return parsed.nombre && (parsed.token || localStorage.getItem('token')) ? parsed : null; 
     } catch { 
       return null; 
     }
   });
 
-  const handleLogin = (datos) => {
+  // Captura el inicio de sesión exitoso guardando el Token JWT aislado para las cabeceras HTTP
+  const handleLogin = useCallback((datos) => {
     setSesion(datos);
     localStorage.setItem('danubio_session', JSON.stringify(datos));
-  };
+    
+    if (datos.token) {
+      localStorage.setItem('token', datos.token);
+    }
+    if (datos.hacienda_id) {
+      localStorage.setItem('hacienda_id', datos.hacienda_id.toString());
+    }
+  }, []);
 
-  const handleLogout = () => {
+  // Limpieza total del almacenamiento local al cerrar sesión para evitar fugas de tokens
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('danubio_session');
+    localStorage.removeItem('token');
+    localStorage.removeItem('hacienda_id');
     setSesion(null);
-  };
+  }, []);
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* RUTA DE INGRESO (LOGIN) */}
         <Route 
           path="/login" 
-          element={!sesion ? <Login onLogin={handleLogin} /> : <Navigate to="/app/inventario" />} 
+          element={!sesion ? <Login onLogin={handleLogin} /> : <Navigate to="/app/inventario" replace />} 
         />
         
+        {/* CONTROL DE RUTAS INTERNAS PROTEGIDAS POR SESIÓN */}
         <Route 
           path="/app/*" 
           element={sesion ? (
@@ -180,11 +206,12 @@ const AppRouter = () => {
               onLogout={handleLogout}
             />
           ) : (
-            <Navigate to="/login" />
+            <Navigate to="/login" replace />
           )} 
         />
 
-        <Route path="*" element={<Navigate to={sesion ? "/app/inventario" : "/login"} />} />
+        {/* FALLBACK GENERAL DE REDIRECCIÓN */}
+        <Route path="*" element={<Navigate to={sesion ? "/app/inventario" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );

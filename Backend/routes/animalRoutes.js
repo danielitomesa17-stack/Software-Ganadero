@@ -1,22 +1,24 @@
-// src/routes/animalRoutes.js
 import express from 'express';
-// Importamos el controlador de animales
 import { 
     getAnimales, 
     registrarAnimal, 
     actualizarAnimal, 
     eliminarAnimal 
-} from '../controllers/animalController.js'; 
-
-// 🔒 Importamos el guardián del SaaS desde la carpeta de middlewares
-import { verificarToken } from '../middlewares/authMiddleware.js';
+} from '../controllers/animalController.js'; // 💡 Recuerda el .js en producción
+import { verificarToken, autorizarRoles } from '../middlewares/authMiddleware.js'; // 💡 Recuerda el .js en producción
 
 const router = express.Router();
 
-// Añadimos 'verificarToken' como segundo argumento para proteger cada endpoint
-router.get('/', verificarToken, getAnimales);
-router.post('/', verificarToken, registrarAnimal);
-router.put('/:id', verificarToken, actualizarAnimal);
-router.delete('/:id', verificarToken, eliminarAnimal);
+// 1. Obtener inventario (Cualquier usuario autenticado de la hacienda)
+router.get('/animales', verificarToken, getAnimales);
+
+// 2. Registrar animal (Verifica token y si quieres restringir por rol, puedes usar tu otro middleware)
+router.post('/animales', verificarToken, registrarAnimal);
+
+// 3. Actualizar pesaje o datos del animal
+router.put('/animales/:id', verificarToken, actualizarAnimal);
+
+// 4. Eliminar animal (Por ejemplo, puedes restringir para que solo el "Administrador" borre)
+router.delete('/animales/:id', verificarToken, autorizarRoles('Administrador', 'Propietario'), eliminarAnimal);
 
 export default router;
