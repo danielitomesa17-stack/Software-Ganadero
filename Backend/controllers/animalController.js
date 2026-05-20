@@ -8,7 +8,7 @@ export const getAnimales = async (req, res) => {
     try {
         // Filtro SaaS estricto usando la columna exacta 'Hacienda_id'
         const [results] = await db.query(
-            "SELECT * FROM animales WHERE Hacienda_id = ? ORDER BY id DESC", 
+            "SELECT * FROM animales WHERE hacienda_id = ? ORDER BY id DESC", 
             [haciendaId]
         );
         res.json(results);
