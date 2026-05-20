@@ -25,14 +25,18 @@ export const login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
         }
 
-        // 4. Generar el Token JWT usando tu variable de entorno segura
+        // 4. Generar el Token JWT empaquetando el hacienda_id para blindar el SaaS
         const token = jwt.sign(
-            { id: usuario.id, rol: usuario.rol },
+            { 
+                id: usuario.id, 
+                rol: usuario.rol,
+                haciendaId: usuario.hacienda_id // 👈 Inyección SaaS: viaja encriptado en el token
+            },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // 5. Enviar la respuesta de éxito inmediata al Frontend
+        // 5. Enviar la respuesta de éxito inmediata al Frontend incluyendo el hacienda_id
         return res.status(200).json({
             success: true,
             message: '¡Ingreso exitoso!',
@@ -41,7 +45,8 @@ export const login = async (req, res) => {
                 id: usuario.id,
                 nombre: usuario.nombre,
                 email: usuario.email,
-                rol: usuario.rol
+                rol: usuario.rol,
+                haciendaId: usuario.hacienda_id // 👈 Para que React sepa a qué entorno entrar
             }
         });
 
