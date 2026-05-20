@@ -3,7 +3,7 @@ import {
   Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History 
 } from 'lucide-react';
 
-const InventarioLista = ({ haciendaId }) => {
+const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
@@ -23,10 +23,19 @@ const InventarioLista = ({ haciendaId }) => {
 
   const [formData, setFormData] = useState(estadoInicial);
 
+  // 1. OBTENER ANIMALES (Ajustado para SaaS con Token)
   const cargarAnimales = useCallback(async () => {
-    if (!haciendaId) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/animales?hacienda_id=${haciendaId}`);
+      const token = localStorage.getItem('token'); // 🔒 Recuperamos el token seguro
+      
+      // Llamado limpio a tu API (Render o Local, usa la ruta relativa o variable de entorno)
+      const res = await fetch('http://localhost:3000/api/animales', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}` // 👈 Pasaporte obligatorio
+        }
+      });
+      
       if (!res.ok) throw new Error("Error servidor");
       const datos = await res.json();
       
@@ -43,16 +52,17 @@ const InventarioLista = ({ haciendaId }) => {
       }));
       setAnimales(datosAdaptados);
     } catch (error) {
-      console.error("Error al cargar:", error);
+      console.error("Error al cargar el inventario SaaS:", error);
     } finally {
       setCargando(false);
     }
-  }, [haciendaId]);
+  }, []);
 
   useEffect(() => {
     cargarAnimales();
   }, [cargarAnimales]);
 
+  // 2. REGISTRAR ANIMAL (El backend inyecta la Hacienda automáticamente)
   const handleGuardar = async (e) => {
     e.preventDefault();
     if (!formData.chapeta) return alert("Chapeta obligatoria");
@@ -63,14 +73,18 @@ const InventarioLista = ({ haciendaId }) => {
       lote: formData.potrero,
       raza: formData.raza,
       sexo: formData.sexo,
-      estado: formData.estado,
-      hacienda_id: haciendaId
+      estado: formData.estado
+      // 🔒 Ya no enviamos hacienda_id en el body, el backend lo sabe por tu Token
     };
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:3000/api/animales', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+        },
         body: JSON.stringify(nuevoAnimal)
       });
       if (res.ok) {
@@ -83,12 +97,17 @@ const InventarioLista = ({ haciendaId }) => {
     }
   };
 
+  // 3. ACTUALIZAR ANIMAL / PESAJE
   const handleActualizar = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:3000/api/animales/${editingAnimal.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+        },
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
           estado: editingAnimal.estado,
@@ -104,10 +123,17 @@ const InventarioLista = ({ haciendaId }) => {
     }
   };
 
+  // 4. ELIMINAR ANIMAL
   const eliminarAnimal = async (id) => {
     if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/animales/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:3000/api/animales/${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}` // 👈 Token de autenticación
+        }
+      });
       if (res.ok) await cargarAnimales();
     } catch {
       alert("Error al eliminar");
