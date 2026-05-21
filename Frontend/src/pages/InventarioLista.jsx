@@ -149,7 +149,7 @@ const InventarioLista = () => {
       </div>
 
       {/* BUSCADOR */}
-      <div className="p-1 bg-[#F8FAFC] min-h-screen">
+      <div className="p-4 sm:p-8 bg-[#F8FAFC] flex-1">
         <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input 
           type="text" placeholder="Buscar por número de chapeta o raza..." 
