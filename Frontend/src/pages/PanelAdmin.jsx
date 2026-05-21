@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 const PanelAdmin = ({ token }) => {
-  // 🌐 Configuración dinámica de la URL base para el entorno SaaS
-  const URL_BASE = window.location.hostname === 'localhost'
+  // 🌐 URL Base dinámica
+  const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api/admin/crear-cliente'
     : 'https://software-ganadero.onrender.com/api/admin/crear-cliente';
 
@@ -17,10 +17,17 @@ const PanelAdmin = ({ token }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Seguridad: no hacer nada si no hay token
+    if (!token) {
+      alert("Error: No tienes una sesión válida.");
+      return;
+    }
+
     setCargando(true);
 
     try {
-      const res = await fetch(URL_BASE, {
+      const res = await fetch(API_BASE, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -33,22 +40,30 @@ const PanelAdmin = ({ token }) => {
 
       if (res.ok) {
         alert('¡Hacienda creada con éxito!');
-        // Limpiar formulario tras éxito
         setForm({ nombreHacienda: '', nombreAdmin: '', emailAdmin: '', password: '' }); 
       } else {
-        // Muestra el mensaje específico que venga del backend
-        alert('Error: ' + (data.message || data.error || 'No se pudo crear la hacienda'));
+        alert('Error del servidor: ' + (data.message || 'No se pudo crear la hacienda'));
       }
     } catch (error) {
-      console.error("Error de conexión:", error);
-      alert('Error crítico de comunicación con el servidor. Verifica que el backend esté activo.');
+      console.error("Error crítico:", error);
+      alert('Error de conexión. Revisa la consola (F12) para detalles.');
     } finally {
       setCargando(false);
     }
   };
 
+  // Si no hay token, avisamos visualmente en lugar de romper la app
+  if (!token) {
+    return (
+      <div className="p-4 border border-red-500 bg-red-50 text-red-700 rounded-lg">
+        <p className="font-bold">❌ Panel Admin bloqueado</p>
+        <p>No se detectó un token válido de autenticación.</p>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-6">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg border-2 border-green-200 mt-6">
       <h2 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-wider">Gestión de Clientes SaaS</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
