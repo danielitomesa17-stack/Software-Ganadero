@@ -26,6 +26,12 @@ function App() {
   if (!sesion) {
     return <Login onLogin={handleLoginSuccess} />;
   }
+  
+  // Añade esto en App.jsx para depurar
+console.log("Sesión cargada:", sesion);
+if (sesion && sesion.user) {
+    console.log("Tu rol actual es:", sesion.user.rol);
+}
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
