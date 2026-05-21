@@ -130,7 +130,7 @@ const InventarioLista = () => {
   if (cargando) return <div className="p-10 text-center uppercase font-black text-slate-400">Sincronizando...</div>;
 
   return (
-    <div className="p-4 sm:p-8 bg-[#F8FAFC] min-h-[90vh]">
+    <div className="p-4 sm:p-8 bg-[#F8FAFC]">
       
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
