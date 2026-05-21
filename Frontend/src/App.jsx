@@ -26,12 +26,15 @@ function App() {
   if (!sesion) {
     return <Login onLogin={handleLoginSuccess} />;
   }
-  
-  // Añade esto en App.jsx para depurar
-console.log("Sesión cargada:", sesion);
-if (sesion && sesion.user) {
-    console.log("Tu rol actual es:", sesion.user.rol);
-}
+  // Cambia esto en tu App.jsx:
+{console.log("Valor de rol:", sesion.user?.rol)}
+{console.log("¿Es SuperAdmin?:", sesion.user?.rol === 'SuperAdmin')}
+
+{sesion.user?.rol === 'SuperAdmin' && (
+  <div className="mt-10 border-t pt-6 bg-red-100 p-4"> {/* Fondo rojo para ver si aparece */}
+    <PanelAdmin token={sesion.token} />
+  </div>
+)}
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
