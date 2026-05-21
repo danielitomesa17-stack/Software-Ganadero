@@ -16,12 +16,16 @@ function App() {
       <h1>Sesión Activa: {sesion.user?.nombre}</h1>
       <p>Rol detectado: {sesion.user?.rol}</p>
       
+      {/* Tu lista de inventario sigue aquí */}
       <InventarioLista />
 
-      <div style={{ border: '5px solid red', padding: '20px', marginTop: '20px' }}>
-        <h2>Zona Administrativa (Debug)</h2>
+      {/* --- AQUÍ VA EL CÓDIGO QUE TE DI --- */}
+      <div className="mt-10 border-t pt-6" style={{backgroundColor: 'yellow'}}>
+        <p>DEBUG: Este panel debería verse siempre:</p>
         <PanelAdmin token={sesion.token} />
       </div>
+      {/* ---------------------------------- */}
+      
     </div>
   );
 }
