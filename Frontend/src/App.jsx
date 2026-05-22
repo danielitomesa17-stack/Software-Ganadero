@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import Login from './pages/Login';
 import InventarioLista from './pages/InventarioLista';
 import PanelAdmin from './pages/PanelAdmin';
+import MedicamentosInventario from './pages/MedicamentosInventario';
+import ReportesSistemas from './pages/ReportesSistemas';
+import GastosSistemas from './pages/GastosSistemas';
+import ProduccionSistemas from './pages/ProduccionSistemas';
+import SanidadSistemas from './pages/SanidadSistemas';
 
 function App() {
   const [sesion] = useState(() => {
