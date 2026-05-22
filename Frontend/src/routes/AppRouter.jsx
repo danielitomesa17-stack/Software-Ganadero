@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Login from './pages/Login';
-import InventarioLista from './pages/InventarioLista';
-import PanelAdmin from './pages/PanelAdmin'; // Asegúrate de que esta ruta sea correcta
+import Login from '../pages/Login';
+import InventarioLista from '../pages/InventarioLista';
+import PanelAdmin from '../pages/PanelAdmin'; // Asegúrate de que esta ruta sea correcta
 
 function App() {
   // Inicialización segura del estado
