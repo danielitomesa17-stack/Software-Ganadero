@@ -11,8 +11,10 @@ const GestionUsuarios = ({ token }) => {
       const res = await fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (!res.ok) throw new Error("Error al obtener usuarios");
       const data = await res.json();
-      setUsuarios(Array.isArray(data) ? data : []);
+      // Aseguramos que 'activo' sea booleano (para que el UI funcione siempre)
+      setUsuarios(Array.isArray(data) ? data.map(u => ({ ...u, activo: !!u.activo })) : []);
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
       setUsuarios([]);
@@ -25,39 +27,41 @@ const GestionUsuarios = ({ token }) => {
     fetchUsuarios();
   }, [fetchUsuarios]);
 
-
   const toggleEstadoUsuario = async (id, estadoActual) => {
     try {
+      // Enviamos el valor invertido. 
+      // Si el backend espera 1/0, forzamos la conversión a entero
+      const nuevoEstado = !estadoActual;
+      
       const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ activo: !estadoActual }) // Envia el estado opuesto
+        body: JSON.stringify({ activo: nuevoEstado ? 1 : 0 }) 
       });
 
-      if (!response.ok) throw new Error("Error en el servidor");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al actualizar estado");
+      }
       
-      fetchUsuarios(); // Recarga la lista para ver el cambio
+      // Recargamos los datos para reflejar el cambio real del servidor
+      fetchUsuarios();
     } catch (err) {
       console.error("Error al cambiar estado:", err);
+      alert("No se pudo actualizar el usuario: " + err.message);
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      {/* ... Cabecera igual ... */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-slate-950">Gestión de Accesos</h2>
           <p className="text-sm text-slate-500">Controla quién tiene acceso a la hacienda.</p>
-        </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-3 text-slate-400" size={18} />
-          <input 
-            placeholder="Buscar usuario..." 
-            className="pl-10 pr-4 py-2 bg-slate-100 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
         </div>
       </div>
 
@@ -88,12 +92,9 @@ const GestionUsuarios = ({ token }) => {
                     </div>
                   </td>
                   <td className="p-5 text-right">
-                    <button className="text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-xs font-bold transition-all">
-                      Cambiar Rol
-                    </button>
                     <button 
                       onClick={() => toggleEstadoUsuario(u.id, u.activo)}
-                      className={`ml-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${u.activo ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${u.activo ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}
                     >
                       {u.activo ? 'Bloquear' : 'Desbloquear'}
                     </button>
