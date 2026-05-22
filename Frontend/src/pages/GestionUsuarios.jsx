@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, UserX, UserCheck, Loader2 } from 'lucide-react';
+import { Search, UserX, UserCheck, Loader2, ShieldUser, Edit3 } from 'lucide-react';
 
 const GestionUsuarios = ({ token }) => {
   const [usuarios, setUsuarios] = useState([]);
@@ -11,9 +11,7 @@ const GestionUsuarios = ({ token }) => {
       const res = await fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Error al obtener usuarios");
       const data = await res.json();
-      // Aseguramos que 'activo' sea booleano (para que el UI funcione siempre)
       setUsuarios(Array.isArray(data) ? data.map(u => ({ ...u, activo: !!u.activo })) : []);
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
@@ -27,37 +25,49 @@ const GestionUsuarios = ({ token }) => {
     fetchUsuarios();
   }, [fetchUsuarios]);
 
+  // Lógica para bloquear/desbloquear
   const toggleEstadoUsuario = async (id, estadoActual) => {
     try {
-      // Enviamos el valor invertido. 
-      // Si el backend espera 1/0, forzamos la conversión a entero
-      const nuevoEstado = !estadoActual;
-      
       const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ activo: nuevoEstado ? 1 : 0 }) 
+        body: JSON.stringify({ activo: !estadoActual ? 1 : 0 })
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al actualizar estado");
-      }
-      
-      // Recargamos los datos para reflejar el cambio real del servidor
+      if (!response.ok) throw new Error("Error al actualizar estado");
       fetchUsuarios();
     } catch (err) {
-      console.error("Error al cambiar estado:", err);
-      alert("No se pudo actualizar el usuario: " + err.message);
+      console.error("Error:", err);
+      alert("No se pudo cambiar el estado");
+    }
+  };
+
+  // Lógica para cambiar rol
+  const cambiarRolUsuario = async (id, rolActual) => {
+    const nuevoRol = prompt("Ingrese el nuevo rol (Administrador / Operador):", rolActual);
+    if (nuevoRol && nuevoRol !== rolActual) {
+      try {
+        const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/rol`, {
+          method: 'PATCH',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ nuevoRol })
+        });
+        if (response.ok) fetchUsuarios();
+        else alert("Error al actualizar rol");
+      } catch (err) {
+        console.error("Error al cambiar rol:", err);
+        alert("Error de conexión");
+      }
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* ... Cabecera igual ... */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-bold text-slate-950">Gestión de Accesos</h2>
@@ -68,7 +78,7 @@ const GestionUsuarios = ({ token }) => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-20 flex justify-center items-center gap-2 text-slate-400">
-            <Loader2 className="animate-spin" /> Cargando usuarios...
+            <Loader2 className="animate-spin" /> Cargando...
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
@@ -91,11 +101,18 @@ const GestionUsuarios = ({ token }) => {
                       {u.activo ? 'Activo' : 'Bloqueado'}
                     </div>
                   </td>
-                  <td className="p-5 text-right">
+                  <td className="p-5 text-right flex justify-end gap-2">
+                    <button 
+                      onClick={() => cambiarRolUsuario(u.id, u.rol)}
+                      className="text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
+                    >
+                      <ShieldUser size={14} /> Cambiar Rol
+                    </button>
                     <button 
                       onClick={() => toggleEstadoUsuario(u.id, u.activo)}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${u.activo ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${u.activo ? 'text-red-600 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'}`}
                     >
+                      {u.activo ? <UserX size={14} /> : <UserCheck size={14} />} 
                       {u.activo ? 'Bloquear' : 'Desbloquear'}
                     </button>
                   </td>
