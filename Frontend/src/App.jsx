@@ -12,20 +12,20 @@ function App() {
   }
 
   return (
-    <div className="p-10 bg-slate-100 min-h-screen">
-      <h1>Sesión Activa: {sesion.user?.nombre}</h1>
-      <p>Rol detectado: {sesion.user?.rol}</p>
+    <div style={{ padding: '40px', backgroundColor: '#f0f0f0', minHeight: '100vh' }}>
+      <h1>PRUEBA DE EMERGENCIA</h1>
       
-      {/* Tu lista de inventario sigue aquí */}
-      <InventarioLista />
+      {/* 1. Inventario */}
+      <div style={{ background: 'white', padding: '20px', marginBottom: '20px' }}>
+        <InventarioLista />
+      </div>
 
-      {/* --- AQUÍ VA EL CÓDIGO QUE TE DI --- */}
-      <div className="mt-10 border-t pt-6" style={{backgroundColor: 'yellow'}}>
-        <p>DEBUG: Este panel debería verse siempre:</p>
+      {/* 2. Panel Admin Forzado */}
+      <div style={{ border: '10px solid red', padding: '40px', background: 'yellow' }}>
+        <h2>ESTO ES EL PANEL ADMIN</h2>
+        <p>Token detectado: {sesion.token ? 'SÍ' : 'NO'}</p>
         <PanelAdmin token={sesion.token} />
       </div>
-      {/* ---------------------------------- */}
-      
     </div>
   );
 }
