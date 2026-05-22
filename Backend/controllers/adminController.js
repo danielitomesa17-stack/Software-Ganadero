@@ -1,6 +1,7 @@
 import pool from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
+// 1. Obtener Bitácora de Auditoría
 export const obtenerBitacora = async (req, res) => {
     try {
         const query = `
@@ -10,7 +11,7 @@ export const obtenerBitacora = async (req, res) => {
             ORDER BY b.fecha_registro DESC
             LIMIT 50
         `;
-        const [logs] = await pool.query(query); // Usamos pool.query
+        const [logs] = await pool.query(query);
         res.json(logs);
     } catch (err) {
         console.error("Error al obtener la bitácora:", err);
@@ -18,9 +19,9 @@ export const obtenerBitacora = async (req, res) => {
     }
 };
 
+// 2. Crear nueva Hacienda (con Transacción y Auditoría)
 export const crearNuevaHacienda = async (req, res) => {
     const { nombreHacienda, nombreAdmin, emailAdmin, password } = req.body;
-    // Asumimos que req.user.id viene del middleware de autenticación (el SuperAdmin que realiza la acción)
     const adminId = req.user.id; 
 
     const connection = await pool.getConnection();
@@ -28,28 +29,28 @@ export const crearNuevaHacienda = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Crear la nueva Hacienda
+        // Crear la nueva Hacienda
         const [hacienda] = await connection.query(
             "INSERT INTO haciendas (nombre) VALUES (?)", 
             [nombreHacienda]
         );
         const haciendaId = hacienda.insertId;
 
-        // 2. Hashear la contraseña
+        // Hashear la contraseña
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // 3. Crear el Administrador
+        // Crear el Administrador
         await connection.query(
             "INSERT INTO usuarios (nombre, email, password, hacienda_id, rol) VALUES (?, ?, ?, ?, 'Administrador')",
             [nombreAdmin, emailAdmin, passwordHash, haciendaId]
         );
 
-        // 4. REGISTRAR EN BITÁCORA (dentro de la misma transacción)
+        // Registrar en Bitácora
         const descripcionLog = `Se creó la hacienda: ${nombreHacienda} con admin: ${emailAdmin}`;
         await connection.query(
             "INSERT INTO bitacora_auditoria (admin_id, accion, descripcion, ip_origen) VALUES (?, ?, ?, ?)",
-            [adminId, 'CREAR_CLIENTE', descripcionLog, req.ip]
+            [adminId, 'CREAR_CLIENTE', descripcionLog, req.ip || '0.0.0.0']
         );
 
         await connection.commit();
@@ -61,5 +62,20 @@ export const crearNuevaHacienda = async (req, res) => {
         res.status(500).json({ success: false, error: "Error al crear la infraestructura del cliente" });
     } finally {
         connection.release();
+    }
+};
+
+// 3. Listar Usuarios (útil para el panel administrativo)
+export const listarUsuarios = async (req, res) => {
+    try {
+        const [usuarios] = await pool.query(`
+            SELECT u.id, u.nombre, u.email, u.rol, h.nombre as nombre_hacienda 
+            FROM usuarios u
+            LEFT JOIN haciendas h ON u.hacienda_id = h.id
+        `);
+        res.json(usuarios);
+    } catch (err) {
+        console.error("Error al listar usuarios:", err);
+        res.status(500).json({ error: "Error al obtener usuarios" });
     }
 };
