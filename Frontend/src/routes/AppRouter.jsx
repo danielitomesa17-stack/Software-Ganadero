@@ -1,74 +1,123 @@
-import React, { useState } from 'react';
-import Login from '../pages/Login';
-import InventarioLista from '../pages/InventarioLista';
-import PanelAdmin from '../pages/PanelAdmin'; // Asegúrate de que esta ruta sea correcta
+import React, { useState, useCallback } from 'react';
+import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, Milk, Menu, LogOut, 
+  ChevronRight, ShieldCheck, Pill, BarChart3, Settings 
+} from 'lucide-react';
 
-function App() {
-  // Inicialización segura del estado
-  const [sesion, setSesion] = useState(() => {
-    try {
-      const sesionGuardada = localStorage.getItem('danubio_session');
-      return sesionGuardada ? JSON.parse(sesionGuardada) : null;
-    } catch {  
-      return null;
-    }
-  });
+// Importaciones de Páginas
+import Login from '../pages/Login'; 
+import InventarioLista from '../pages/InventarioLista'; 
+import ProduccionSistemas from '../pages/ProduccionSistemas'; 
+import SanidadSistemas from '../pages/SanidadSistemas';
+import MedicamentosInventario from '../pages/MedicamentosInventario'; 
+import ReportesSistemas from '../pages/ReportesSistemas'; 
+import GastosSistemas from '../pages/GastosSistemas';
+import PanelAdmin from '../pages/PanelAdmin'; // Módulo independiente
 
-  const handleLoginSuccess = (datosBackend) => {
-    localStorage.setItem('danubio_session', JSON.stringify(datosBackend));
-    setSesion(datosBackend);
-  };
+const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
-    localStorage.removeItem('danubio_session');
-    setSesion(null);
-  };
-
-  // Si no hay sesión, mostramos el Login
-  if (!sesion) {
-    return <Login onLogin={handleLoginSuccess} />;
-  }
-
-  // Si hay sesión, mostramos el diseño principal
   return (
-    <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
-      <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-        
-        {/* Encabezado con datos de sesión */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
-          <div>
-            <h1 className="text-2xl font-black text-slate-950 tracking-tight">
-              Bienvenido, <span className="text-green-700">{sesion.user?.nombre || 'Usuario'}</span>
-            </h1>
-            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1">
-              Rol: {sesion.user?.rol || 'No asignado'} — Hacienda El Danubio
-            </p>
+    <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+      {/* SIDEBAR */}
+      <aside className={`${sidebarOpen ? 'w-72' : 'w-24'} bg-[#0F172A] p-6 flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl`}>
+        <div className="flex items-center gap-4 px-2 mb-12">
+          <div className="min-w-[45px] h-[45px] bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg font-black text-xl">
+            {sesion.nombre_hacienda?.substring(0, 2).toUpperCase() || 'HD'}
           </div>
-          
-          <button 
-            onClick={handleLogout}
-            className="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm border border-red-200/50"
-          >
-            Cerrar Sesión
-          </button>
+          {sidebarOpen && (
+            <div className="flex flex-col">
+              <span className="text-white font-black text-xl tracking-tighter uppercase">Hacienda</span>
+              <span className="text-green-400 text-[10px] font-bold tracking-[0.2em] uppercase">{sesion.nombre_hacienda}</span>
+            </div>
+          )}
         </div>
 
-        {/* 🚀 Panel exclusivo para SuperAdmin */}
-        {sesion.user?.rol === 'SuperAdmin' && (
-          <div className="mb-8 p-6 bg-slate-900 rounded-3xl text-white shadow-lg">
-            <h2 className="text-lg font-bold mb-4 flex items-center">
-              <span className="mr-2">⚡</span> Panel de Administración
-            </h2>
-            <PanelAdmin token={sesion.token} />
-          </div>
-        )}
+        <nav className="flex-1 space-y-3">
+          <Link to="/app/inventario" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/inventario') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <LayoutDashboard size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Inventario</span>}
+          </Link>
 
-        {/* Lista de Inventario principal */}
-        <InventarioLista />
-        
-      </div>
+          {/* MÓDULO ADMIN RESTRINGIDO */}
+          {sesion.user?.rol === 'SuperAdmin' && (
+            <Link to="/app/admin" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/admin') ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+              <Settings size={22} />
+              {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Admin Panel</span>}
+            </Link>
+          )}
+
+          <Link to="/app/reportes" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/reportes') ? 'bg-rose-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BarChart3 size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Análisis</span>}
+          </Link>
+          {/* ... otros links (Producción, Sanidad, Farmacia) */}
+        </nav>
+
+        <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full">
+          <LogOut size={22} />
+          {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Cerrar Sesión</span>}
+        </button>
+      </aside>
+
+      {/* ÁREA PRINCIPAL */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-20 bg-white/80 border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-40">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-600"><Menu size={24} /></button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-8 lg:p-12">
+          <div className="max-w-7xl mx-auto">
+            <Routes>
+              <Route path="inventario" element={<InventarioLista />} />
+              <Route path="reportes" element={<ReportesSistemas />} />
+              <Route path="produccion" element={<ProduccionSistemas />} />
+              <Route path="sanidad" element={<SanidadSistemas />} />
+              <Route path="farmacia" element={<MedicamentosInventario />} />
+              {/* RUTA PROTEGIDA PARA ADMIN */}
+              <Route 
+                path="admin" 
+                element={sesion.user?.rol === 'SuperAdmin' ? <PanelAdmin token={sesion.token} /> : <Navigate to="/app/inventario" replace />} 
+              />
+              <Route path="*" element={<Navigate to="inventario" replace />} />
+            </Routes>
+          </div>
+        </div>
+      </main>
     </div>
   );
-}
+};
 
-export default App;
+const AppRouter = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sesion, setSesion] = useState(() => {
+    try {
+      const guardada = localStorage.getItem('danubio_session');
+      return guardada ? JSON.parse(guardada) : null;
+    } catch { return null; }
+  });
+
+  const handleLogin = useCallback((datos) => {
+    setSesion(datos);
+    localStorage.setItem('danubio_session', JSON.stringify(datos));
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('danubio_session');
+    setSesion(null);
+  }, []);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={!sesion ? <Login onLogin={handleLogin} /> : <Navigate to="/app/inventario" replace />} />
+        <Route path="/app/*" element={sesion ? <NavContent sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} sesion={sesion} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to={sesion ? "/app/inventario" : "/login"} replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export default AppRouter;
