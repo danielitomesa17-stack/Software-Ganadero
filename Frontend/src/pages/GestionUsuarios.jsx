@@ -25,30 +25,23 @@ const GestionUsuarios = ({ token }) => {
     fetchUsuarios();
   }, [fetchUsuarios]);
 
-  // Función para manejar bloqueos (preparada para cuando crees el endpoint)
-  const toggleEstadoUsuario = async (id, estadoActual) => {
-    console.log("Intentando cambiar ID:", id, "a estado:", !estadoActual);
 
+  const toggleEstadoUsuario = async (id, estadoActual) => {
     try {
       const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
         method: 'PATCH',
-        headers: {
+        headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ activo: !estadoActual })
+        body: JSON.stringify({ activo: !estadoActual }) // Envia el estado opuesto
       });
 
-      const data = await response.json();
-      if (!response.ok) {
-      throw new Error(data.error || "Error desconocido en el servidor");
-      }
-
-      console.log("Cambio exitoso:", data);
-      fetchUsuarios(); // Recargar lista
+      if (!response.ok) throw new Error("Error en el servidor");
+      
+      fetchUsuarios(); // Recarga la lista para ver el cambio
     } catch (err) {
-      console.error("ERROR DETECTADO:", err.message);
-      alert("No se pudo cambiar el estado: " + err.message);
+      console.error("Error al cambiar estado:", err);
     }
   };
 

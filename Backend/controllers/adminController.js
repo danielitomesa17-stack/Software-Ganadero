@@ -96,15 +96,17 @@ export const listarUsuarios = async (req, res) => {
     }
 };
 
+// adminController.js
 export const cambiarEstadoUsuario = async (req, res) => {
     const { id } = req.params;
-    const { activo } = req.body; // Recibimos true o false desde el frontend
+    const { activo } = req.body; 
 
     try {
-        await pool.query("UPDATE usuarios SET activo = ? WHERE id = ?", [activo, id]);
-        res.json({ success: true, message: "Estado actualizado correctamente" });
+        // Asegúrate de que la columna 'activo' exista en tu tabla 'usuarios'
+        await pool.query("UPDATE usuarios SET activo = ? WHERE id = ?", [activo ? 1 : 0, id]);
+        res.json({ success: true, message: "Estado actualizado" });
     } catch (err) {
         console.error("Error al actualizar usuario:", err);
-        res.status(500).json({ error: "Error al actualizar estado" });
+        res.status(500).json({ error: "Error interno en el servidor" });
     }
 };
