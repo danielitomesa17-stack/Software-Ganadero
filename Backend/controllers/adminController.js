@@ -18,6 +18,22 @@ export const obtenerBitacora = async (req, res) => {
         res.status(500).json({ error: "Error al obtener la bitácora" });
     }
 };
+// adminController.js
+export const obtenerUsuarios = async (req, res) => {
+    try {
+        const query = `
+            SELECT u.id, u.nombre, u.email, u.rol, 
+                   COALESCE(h.nombre, 'Sin asignar') as nombre_hacienda 
+            FROM usuarios u
+            LEFT JOIN haciendas h ON u.hacienda_id = h.id
+        `;
+        const [usuarios] = await pool.query(query);
+        res.json(usuarios);
+    } catch (err) {
+        console.error("Error al obtener usuarios:", err);
+        res.status(500).json({ error: "Error al obtener usuarios" });
+    }
+};
 
 // 2. Crear nueva Hacienda (con Transacción y Auditoría)
 export const crearNuevaHacienda = async (req, res) => {
