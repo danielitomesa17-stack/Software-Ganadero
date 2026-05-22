@@ -1,7 +1,7 @@
 import React from 'react';
-import Login from './pages/Login';
-import InventarioLista from './pages/InventarioLista';
-import PanelAdmin from './pages/PanelAdmin'; 
+import Login from '../pages/Login';
+import InventarioLista from '../pages/InventarioLista';
+import PanelAdmin from '../pages/PanelAdmin'; 
 
 function App() {
   const sesionGuardada = localStorage.getItem('danubio_session');
