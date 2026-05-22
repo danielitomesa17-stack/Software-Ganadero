@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, UserX, UserCheck, Loader2 } from 'lucide-react';
 
 const GestionUsuarios = ({ token }) => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Llamada al backend
-    fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(res => res.json())
-    .then(data => {
+  const fetchUsuarios = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
       setUsuarios(Array.isArray(data) ? data : []);
-      setLoading(false);
-    })
-    .catch(err => {
+    } catch (err) {
       console.error("Error al cargar usuarios:", err);
+      setUsuarios([]);
+    } finally {
       setLoading(false);
-    });
+    }
   }, [token]);
+
+  useEffect(() => {
+    fetchUsuarios();
+  }, [fetchUsuarios]);
 
   // Función para manejar bloqueos (preparada para cuando crees el endpoint)
   const toggleEstadoUsuario = async (id, estadoActual) => {
+    console.log("Intentando cambiar ID:", id, "a estado:", !estadoActual);
+
     try {
       const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
         method: 'PATCH',
@@ -34,15 +40,15 @@ const GestionUsuarios = ({ token }) => {
       });
 
       const data = await response.json();
-      if (data.success) {
-        // Actualizar el estado local de los usuarios
-        setUsuarios(prev => prev.map(u => u.id === id ? { ...u, activo: !estadoActual } : u));
-      } else {
-        alert("Error al actualizar el estado del usuario.");
+      if (!response.ok) {
+      throw new Error(data.error || "Error desconocido en el servidor");
       }
+
+      console.log("Cambio exitoso:", data);
+      fetchUsuarios(); // Recargar lista
     } catch (err) {
-      console.error("Error al cambiar el estado del usuario:", err);
-      alert("Error al cambiar el estado del usuario.");
+      console.error("ERROR DETECTADO:", err.message);
+      alert("No se pudo cambiar el estado: " + err.message);
     }
   };
 
