@@ -1,6 +1,6 @@
 import express from 'express';
 import { verificarToken, autorizarRoles } from '../middlewares/authMiddlewares.js';
-import { crearNuevaHacienda, obtenerBitacora } from '../controllers/adminController.js';
+import { crearNuevaHacienda, obtenerBitacora, obtenerUsuarios } from '../controllers/adminController.js';
 
 const router = express.Router();
 

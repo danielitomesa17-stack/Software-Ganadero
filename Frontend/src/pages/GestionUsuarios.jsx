@@ -1,28 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Shield, UserX, UserCheck, Loader2 } from 'lucide-react';
+import { Search, UserX, UserCheck, Loader2 } from 'lucide-react';
 
 const GestionUsuarios = ({ token }) => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Función para cargar usuarios desde el backend
-  const fetchUsuarios = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      setUsuarios(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Error al cargar usuarios:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchUsuarios();
+    // Llamada al backend
+    fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      setUsuarios(Array.isArray(data) ? data : []);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error("Error al cargar usuarios:", err);
+      setLoading(false);
+    });
   }, [token]);
 
   // Función para manejar bloqueos (preparada para cuando crees el endpoint)
