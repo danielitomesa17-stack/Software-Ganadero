@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import { Filter } from 'lucide-react'; // Importación separada para asegurar que se cargue
 
 const BitacoraAuditoria = ({ token }) => {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    // Aquí hacemos la llamada al backend que configuramos
     fetch('https://software-ganadero.onrender.com/api/admin/bitacora', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
     .then(data => {
-      setLogs(data);
+      // Si el backend devuelve un array, lo guardamos
+      setLogs(Array.isArray(data) ? data : []);
     })
-    .catch(err => {
-      console.error("Error al traer logs:", err);
-    });
+    .catch(err => console.error("Error al traer logs:", err));
   }, [token]);
 
   return (
@@ -37,20 +36,26 @@ const BitacoraAuditoria = ({ token }) => {
               <th className="p-5 text-[10px] uppercase font-black text-slate-400">Fecha</th>
               <th className="p-5 text-[10px] uppercase font-black text-slate-400">Administrador</th>
               <th className="p-5 text-[10px] uppercase font-black text-slate-400">Acción</th>
-              <th className="p-5 text-[10px] uppercase font-black text-slate-400">Objetivo</th>
+              <th className="p-5 text-[10px] uppercase font-black text-slate-400">Detalle</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {logs.map(log => (
-              <tr key={log.id} className="hover:bg-slate-50">
-                <td className="p-5 text-sm text-slate-500 flex items-center gap-2">
-                  <Clock size={14} /> {log.fecha}
-                </td>
-                <td className="p-5 text-sm font-bold text-slate-800">{log.usuario}</td>
-                <td className="p-5 text-sm font-medium text-slate-600">{log.accion}</td>
-                <td className="p-5 text-sm text-slate-600 italic">{log.objetivo}</td>
+            {logs.length > 0 ? (
+              logs.map(log => (
+                <tr key={log.id} className="hover:bg-slate-50">
+                  <td className="p-5 text-sm text-slate-500 flex items-center gap-2">
+                    <Clock size={14} /> {new Date(log.fecha_registro).toLocaleString()}
+                  </td>
+                  <td className="p-5 text-sm font-bold text-slate-800">{log.admin_nombre}</td>
+                  <td className="p-5 text-sm font-medium text-slate-600">{log.accion}</td>
+                  <td className="p-5 text-sm text-slate-600 italic">{log.descripcion}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="4" className="p-10 text-center text-slate-400">No hay registros de auditoría disponibles.</td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
