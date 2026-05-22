@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 const app = express();
 // Middlewares
