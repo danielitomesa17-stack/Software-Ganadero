@@ -1,26 +1,71 @@
-import React from 'react';
-import Login from '../pages/Login';
-import InventarioLista from '../pages/InventarioLista';
-import PanelAdmin from '../pages/PanelAdmin'; 
+import React, { useState } from 'react';
+import Login from './pages/Login';
+import InventarioLista from './pages/InventarioLista';
+import PanelAdmin from './pages/PanelAdmin'; // Asegúrate de que esta ruta sea correcta
 
 function App() {
-  const sesionGuardada = localStorage.getItem('danubio_session');
-  const sesion = sesionGuardada ? JSON.parse(sesionGuardada) : null;
+  // Inicialización segura del estado
+  const [sesion, setSesion] = useState(() => {
+    try {
+      const sesionGuardada = localStorage.getItem('danubio_session');
+      return sesionGuardada ? JSON.parse(sesionGuardada) : null;
+    } catch {  
+      return null;
+    }
+  });
 
+  const handleLoginSuccess = (datosBackend) => {
+    localStorage.setItem('danubio_session', JSON.stringify(datosBackend));
+    setSesion(datosBackend);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('danubio_session');
+    setSesion(null);
+  };
+
+  // Si no hay sesión, mostramos el Login
   if (!sesion) {
-    return <Login onLogin={(d) => { localStorage.setItem('danubio_session', JSON.stringify(d)); window.location.reload(); }} />;
+    return <Login onLogin={handleLoginSuccess} />;
   }
 
+  // Si hay sesión, mostramos el diseño principal
   return (
-    <div className="p-10 bg-slate-100 min-h-screen">
-      <h1>Sesión Activa: {sesion.user?.nombre}</h1>
-      <p>Rol detectado: {sesion.user?.rol}</p>
-      
-      <InventarioLista />
+    <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
+      <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+        
+        {/* Encabezado con datos de sesión */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
+          <div>
+            <h1 className="text-2xl font-black text-slate-950 tracking-tight">
+              Bienvenido, <span className="text-green-700">{sesion.user?.nombre || 'Usuario'}</span>
+            </h1>
+            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1">
+              Rol: {sesion.user?.rol || 'No asignado'} — Hacienda El Danubio
+            </p>
+          </div>
+          
+          <button 
+            onClick={handleLogout}
+            className="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm border border-red-200/50"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
 
-      <div style={{ border: '5px solid red', padding: '20px', marginTop: '20px' }}>
-        <h2>Zona Administrativa (Debug)</h2>
-        <PanelAdmin token={sesion.token} />
+        {/* 🚀 Panel exclusivo para SuperAdmin */}
+        {sesion.user?.rol === 'SuperAdmin' && (
+          <div className="mb-8 p-6 bg-slate-900 rounded-3xl text-white shadow-lg">
+            <h2 className="text-lg font-bold mb-4 flex items-center">
+              <span className="mr-2">⚡</span> Panel de Administración
+            </h2>
+            <PanelAdmin token={sesion.token} />
+          </div>
+        )}
+
+        {/* Lista de Inventario principal */}
+        <InventarioLista />
+        
       </div>
     </div>
   );
