@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { Clock, Filter, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Clock } from 'lucide-react';
 
-const BitacoraAuditoria = ({ _token }) => {
-  // Simularemos logs de auditoría
-  const [logs] = useState([
-    { id: 1, usuario: 'María López', accion: 'Bloqueó usuario', objetivo: 'Juan Pérez', fecha: '22 Mayo, 02:10 AM' },
-    { id: 2, usuario: 'Sistema', accion: 'Login exitoso', objetivo: 'María López', fecha: '22 Mayo, 01:45 AM' },
-  ]);
+const BitacoraAuditoria = ({ token }) => {
+  const [logs, setLogs] = useState([]);
+
+  useEffect(() => {
+    // Aquí hacemos la llamada al backend que configuramos
+    fetch('https://software-ganadero.onrender.com/api/admin/bitacora', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      setLogs(data);
+    })
+    .catch(err => {
+      console.error("Error al traer logs:", err);
+    });
+  }, [token]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
