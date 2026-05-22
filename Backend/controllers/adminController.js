@@ -22,7 +22,7 @@ export const obtenerBitacora = async (req, res) => {
 export const obtenerUsuarios = async (req, res) => {
     try {
         const query = `
-            SELECT u.id, u.nombre, u.email, u.rol, 
+            SELECT u.id, u.nombre, u.email, u.rol, u.activo,
                    COALESCE(h.nombre, 'Sin asignar') as nombre_hacienda 
             FROM usuarios u
             LEFT JOIN haciendas h ON u.hacienda_id = h.id
@@ -85,7 +85,7 @@ export const crearNuevaHacienda = async (req, res) => {
 export const listarUsuarios = async (req, res) => {
     try {
         const [usuarios] = await pool.query(`
-            SELECT u.id, u.nombre, u.email, u.rol, h.nombre as nombre_hacienda 
+            SELECT u.id, u.nombre, u.email, u.rol, u.activo, h.nombre as nombre_hacienda 
             FROM usuarios u
             LEFT JOIN haciendas h ON u.hacienda_id = h.id
         `);
@@ -93,5 +93,18 @@ export const listarUsuarios = async (req, res) => {
     } catch (err) {
         console.error("Error al listar usuarios:", err);
         res.status(500).json({ error: "Error al obtener usuarios" });
+    }
+};
+
+export const cambiarEstadoUsuario = async (req, res) => {
+    const { id } = req.params;
+    const { activo } = req.body; // Recibimos true o false desde el frontend
+
+    try {
+        await pool.query("UPDATE usuarios SET activo = ? WHERE id = ?", [activo, id]);
+        res.json({ success: true, message: "Estado actualizado correctamente" });
+    } catch (err) {
+        console.error("Error al actualizar usuario:", err);
+        res.status(500).json({ error: "Error al actualizar estado" });
     }
 };

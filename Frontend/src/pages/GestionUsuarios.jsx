@@ -23,8 +23,27 @@ const GestionUsuarios = ({ token }) => {
 
   // Función para manejar bloqueos (preparada para cuando crees el endpoint)
   const toggleEstadoUsuario = async (id, estadoActual) => {
-    // Aquí iría tu fetch('.../toggle-usuario', { method: 'POST'... })
-    alert(`Lógica para ${estadoActual ? 'Bloquear' : 'Desbloquear'} usuario ${id}`);
+    try {
+      const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ activo: !estadoActual })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Actualizar el estado local de los usuarios
+        setUsuarios(prev => prev.map(u => u.id === id ? { ...u, activo: !estadoActual } : u));
+      } else {
+        alert("Error al actualizar el estado del usuario.");
+      }
+    } catch (err) {
+      console.error("Error al cambiar el estado del usuario:", err);
+      alert("Error al cambiar el estado del usuario.");
+    }
   };
 
   return (

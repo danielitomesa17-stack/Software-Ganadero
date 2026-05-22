@@ -11,4 +11,5 @@ router.use(verificarToken, autorizarRoles('SuperAdmin'));
 router.post('/crear-cliente', crearNuevaHacienda);
 router.get('/bitacora', obtenerBitacora);
 router.get('/usuarios', verificarToken, autorizarRoles('SuperAdmin'), obtenerUsuarios);
+router.patch('/usuarios/:id/estado', verificarToken, autorizarRoles('SuperAdmin'), cambiarEstadoUsuario);
 export default router;
