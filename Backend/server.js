@@ -4,6 +4,7 @@ import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import { verificarToken } from './middlewares/authMiddleware.js';
 
 const app = express();
 // Middlewares
@@ -14,7 +15,7 @@ app.use(express.json());
 app.use('/api/animales', animalRoutes);
 app.use('/api', authRoutes);
 app.use('/api/auth', authRoutes);   // Acceso público (login)
-app.use('/api/admin', adminRoutes); // Acceso privado (solo SuperAdmin)
+app.use('/api/admin', verificarToken, adminRoutes); // Acceso privado (solo SuperAdmin)
 // Manejo de errores global
 // Al poner _next evitas el error de "defined but never used"
 app.use((err, req, res, _next) => {

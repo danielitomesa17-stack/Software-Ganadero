@@ -11,6 +11,11 @@ export const verificarToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const [rows] = await pool.query('SELECT activo FROM usuarios WHERE id = ?', [decoded.id]);
+        if (rows.length === 0 || !rows[0].activo) {
+            return res.status(403).json({ success: false, error: 'Usuario inactivo. Contacta al administrador.' });
+        }
         
         // 🔒 Aquí ya viajan de forma segura: decoded.id, decoded.rol y decoded.haciendaId
         req.user = decoded; 
