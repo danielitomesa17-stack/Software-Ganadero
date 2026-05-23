@@ -7,27 +7,30 @@ import adminRoutes from './routes/adminRoutes.js';
 import { verificarToken } from './middlewares/authMiddlewares.js';
 
 const app = express();
-// Middlewares
-app.use(cors());
+
+// Configuración de CORS para permitir peticiones desde tu Frontend
+app.use(cors({
+  origin: '*', // O usa tu dominio: 'https://software-ganadero.vercel.app'
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Rutas
-app.use('/api/animales', animalRoutes);
-app.use('/api', authRoutes);
-app.use('/api/auth', authRoutes);   // Acceso público (login)
-app.use('/api/admin', verificarToken, adminRoutes); // Acceso privado (solo SuperAdmin)
-// Manejo de errores global
-// Al poner _next evitas el error de "defined but never used"
+app.use('/api', authRoutes); // Login y registro
+app.use('/api/auth', authRoutes);
+
+// PROTEGER RUTAS: Ahora el middleware verifica el token ANTES de entrar a animalRoutes
+app.use('/api/animales', verificarToken, animalRoutes); 
+app.use('/api/admin', verificarToken, adminRoutes);
+
 app.use((err, req, res, _next) => {
     console.error('❌ Error detectado:', err.message);
-    res.status(500).json({ 
-        error: 'Error interno en el servidor',
-        detalle: process.env.NODE_ENV === 'development' ? err.message : {} 
-    });
+    res.status(500).json({ error: 'Error interno en el servidor' });
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
     console.log(`🚀 Servidor modular Hacienda Danubio en puerto ${PORT}`);
 });
