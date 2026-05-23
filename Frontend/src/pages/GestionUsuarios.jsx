@@ -1,5 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, UserX, UserCheck, Loader2, ShieldUser, Edit3 } from 'lucide-react';
+import { UserX, UserCheck, Loader2, ShieldUser } from 'lucide-react';
+
+// --- FUERA DEL COMPONENTE: Función de red centralizada ---
+const authenticatedFetch = async (url, token, options = {}) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  // Si el servidor detecta que el usuario está bloqueado (403), lo expulsamos
+  if (res.status === 403) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new Error("Usuario bloqueado");
+  }
+  return res;
+};
 
 const GestionUsuarios = ({ token }) => {
   const [usuarios, setUsuarios] = useState([]);
@@ -8,9 +28,7 @@ const GestionUsuarios = ({ token }) => {
   const fetchUsuarios = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://software-ganadero.onrender.com/api/admin/usuarios', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await authenticatedFetch('https://software-ganadero.onrender.com/api/admin/usuarios', token);
       const data = await res.json();
       setUsuarios(Array.isArray(data) ? data.map(u => ({ ...u, activo: !!u.activo })) : []);
     } catch (err) {
@@ -25,18 +43,12 @@ const GestionUsuarios = ({ token }) => {
     fetchUsuarios();
   }, [fetchUsuarios]);
 
-  // Lógica para bloquear/desbloquear
   const toggleEstadoUsuario = async (id, estadoActual) => {
     try {
-      const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, {
+      await authenticatedFetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, token, {
         method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ activo: !estadoActual ? 1 : 0 })
       });
-      if (!response.ok) throw new Error("Error al actualizar estado");
       fetchUsuarios();
     } catch (err) {
       console.error("Error:", err);
@@ -44,21 +56,15 @@ const GestionUsuarios = ({ token }) => {
     }
   };
 
-  // Lógica para cambiar rol
   const cambiarRolUsuario = async (id, rolActual) => {
     const nuevoRol = prompt("Ingrese el nuevo rol (Administrador / Operador):", rolActual);
     if (nuevoRol && nuevoRol !== rolActual) {
       try {
-        const response = await fetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/rol`, {
+        await authenticatedFetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/rol`, token, {
           method: 'PATCH',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json' 
-          },
           body: JSON.stringify({ nuevoRol })
         });
-        if (response.ok) fetchUsuarios();
-        else alert("Error al actualizar rol");
+        fetchUsuarios();
       } catch (err) {
         console.error("Error al cambiar rol:", err);
         alert("Error de conexión");
