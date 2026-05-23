@@ -4,7 +4,7 @@ import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import { verificarToken } from './middlewares/authMiddleware.js';
+import { verificarToken } from './middlewares/authMiddlewares.js';
 
 const app = express();
 // Middlewares
