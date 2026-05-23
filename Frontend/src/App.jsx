@@ -1,59 +1,62 @@
-import React, { useState } from 'react';
-import Login from './pages/Login';
-import InventarioLista from './pages/InventarioLista';
-import PanelAdmin from './pages/PanelAdmin';
-// ... otros imports
+  import React, { useState } from 'react';
+  import Login from './pages/Login';
+  import InventarioLista from './pages/InventarioLista';
 
-// --- INTERCEPTOR GLOBAL: Seguridad Centralizada ---
-// Este código se ejecuta una sola vez al cargar la aplicación.
-// Si cualquier fetch recibe un 403, el usuario es expulsado inmediatamente.
-const originalFetch = window.fetch;
-window.fetch = async (...args) => {
-  const response = await originalFetch(...args);
-  
-  if (response.status === 403) {
-    localStorage.removeItem('danubio_session');
-    window.location.href = '/login';
-    // Lanzamos un error para que los componentes sepan que la petición se abortó
-    throw new Error("Usuario bloqueado o sin permisos");
-  }
-  return response;
-};
+  function App() {
+    // Inicialización segura del estado
+    const [sesion, setSesion] = useState(() => {
+      try {
+        const sesionGuardada = localStorage.getItem('danubio_session');
+        return sesionGuardada ? JSON.parse(sesionGuardada) : null;
+      } catch {  
+        return null;
+      }
+    });
 
-function App() {
-  const [sesion] = useState(() => {
-    try {
-      const s = localStorage.getItem('danubio_session');
-      return s ? JSON.parse(s) : null;
-    } catch { return null; }
-  });
+    const handleLoginSuccess = (datosBackend) => {
+      localStorage.setItem('danubio_session', JSON.stringify(datosBackend));
+      setSesion(datosBackend);
+    };
 
-  if (!sesion) {
-    return <Login onLogin={(d) => { localStorage.setItem('danubio_session', JSON.stringify(d)); window.location.reload(); }} />;
-  }
+    const handleLogout = () => {
+      localStorage.removeItem('danubio_session');
+      setSesion(null);
+    };
 
-  return (
-    <div className="p-6 bg-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Panel Administrativo */}
-        {sesion.user?.rol === 'SuperAdmin' && (
-          <div className="mb-8 p-6 bg-white border-2 border-green-500 rounded-2xl shadow-sm">
-            <h2 className="text-green-700 font-bold mb-4 uppercase text-xs tracking-widest">
-              Panel Administrativo
-            </h2>
-            <PanelAdmin token={sesion.token} />
+    if (!sesion) {
+      return <Login onLogin={handleLoginSuccess} />;
+    }
+
+    return (
+      <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
+        <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+          
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
+            <div>
+              <h1 className="text-2xl font-black text-slate-950 tracking-tight">
+                Bienvenido, <span className="text-green-700">{sesion.user?.nombre || 'Usuario'}</span>
+              </h1>
+              <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mt-1">
+                Rol: {sesion.user?.rol || 'No asignado'} — Hacienda El Danubio
+              </p>
+            </div>
+            
+            <button 
+              onClick={handleLogout}
+              className="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-colors shadow-sm border border-red-200/50"
+            >
+              Cerrar Sesión
+            </button>
           </div>
-        )}
 
-        {/* Inventario Principal */}
-        <div className="bg-white p-8 rounded-3xl shadow-lg">
+          {/* ⚠️ CORRECCIÓN: Eliminamos el prop 'haciendaId'. 
+            El Backend ya sabe quién eres a través del Token JWT. 
+          */}
           <InventarioLista />
+          
         </div>
-        
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-export default App;
+  export default App;

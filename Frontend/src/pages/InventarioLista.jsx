@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History} from 'lucide-react';
-
-const URL_BASE = 'https://software-ganadero.onrender.com/api/animales';
+import { 
+  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History 
+} from 'lucide-react';
 
 const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
@@ -12,19 +12,30 @@ const InventarioLista = () => {
   const [viewingAnimal, setViewingAnimal] = useState(null);
   const [vistaTabular, setVistaTabular] = useState(true);
 
-  const estadoInicial = { chapeta: '', raza: 'Brahman', peso: '', potrero: 'Levante', sexo: 'Hembra', estado: 'Sano' };
+  const estadoInicial = {
+    chapeta: '', 
+    raza: 'Brahman', 
+    peso: '', 
+    potrero: 'Levante', 
+    sexo: 'Hembra', 
+    estado: 'Sano'
+  };
+
   const [formData, setFormData] = useState(estadoInicial);
 
+  // 🌐 Configuración dinámica de la URL base (Limpia y segura para el SaaS)
+  const URL_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000/api/animales'
+    : 'https://software-ganadero.onrender.com/api/animales';
+
+  // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
   const getToken = () => {
     const sesion = localStorage.getItem('danubio_session');
     return sesion ? JSON.parse(sesion).token : null;
   };
-
-  // --- FUNCIÓN ÚNICA DE CARGA (Con seguridad 403 integrada) ---
   const cargarAnimales = useCallback(async () => {
     const token = getToken();
     if (!token) { setCargando(false); return; }
-    
     try {
       setCargando(true);
       const res = await fetch(URL_BASE, {
@@ -32,16 +43,10 @@ const InventarioLista = () => {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       
-      // SI EL SERVIDOR RESPONDE 403, EL USUARIO ESTÁ BLOQUEADO
-      if (res.status === 403) {
-        localStorage.removeItem('danubio_session');
-        window.location.href = '/login';
-        return;
-      }
-
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const datos = await res.json();
       
+      // Mapeo seguro adaptado al esquema real de tu Base de Datos en Aiven
       setAnimales(datos.map(a => ({
         id: a.id,
         chapeta: a.caravana_id || 'SIN CAP',
@@ -58,11 +63,10 @@ const InventarioLista = () => {
     } finally {
       setCargando(false); 
     }
-  }, []);
+  }, [URL_BASE]);
 
   useEffect(() => { cargarAnimales(); }, [cargarAnimales]);
-
-  // --- RESTO DE TUS FUNCIONES (handleGuardar, handleActualizar, eliminarAnimal) ---
+  // 2. REGISTRAR ANIMAL 
   const handleGuardar = async (e) => {
     e.preventDefault();
     const token = getToken();
@@ -70,22 +74,40 @@ const InventarioLista = () => {
       const res = await fetch(URL_BASE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ caravana_id: formData.chapeta.toUpperCase(), peso_inicial: Number(formData.peso), lote: formData.potrero, raza: formData.raza, sexo: formData.sexo, estado: formData.estado })
+        body: JSON.stringify({
+          caravana_id: formData.chapeta.toUpperCase(),
+          peso_inicial: Number(formData.peso),
+          lote: formData.potrero,
+          raza: formData.raza,
+          sexo: formData.sexo,
+          estado: formData.estado
+        })
       });
-      if (res.ok) { await cargarAnimales(); setIsModalOpen(false); setFormData(estadoInicial); }
+      if (res.ok) {
+        await cargarAnimales();
+        setIsModalOpen(false);
+        setFormData(estadoInicial);
+      }
     } catch { alert("Error de conexión"); }
   };
 
-  const handleActualizar = async (e) => {
+    const handleActualizar = async (e) => {
     e.preventDefault();
     const token = getToken();
     try {
       const res = await fetch(`${URL_BASE}/${editingAnimal.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ peso_actual: Number(editingAnimal.pesoActual), estado: editingAnimal.estado, lote: editingAnimal.potrero })
+        body: JSON.stringify({
+          peso_actual: Number(editingAnimal.pesoActual),
+          estado: editingAnimal.estado,
+          lote: editingAnimal.potrero
+        })
       });
-      if (res.ok) { await cargarAnimales(); setEditingAnimal(null); }
+      if (res.ok) {
+        await cargarAnimales();
+        setEditingAnimal(null);
+      }
     } catch { alert("Error al actualizar"); }
   };
 
@@ -99,7 +121,10 @@ const InventarioLista = () => {
   };
 
   const filtrados = useMemo(() => {
-    return animales.filter(a => a.chapeta.toLowerCase().includes(busqueda.toLowerCase()) || a.raza.toLowerCase().includes(busqueda.toLowerCase()));
+    return animales.filter(a => 
+      a.chapeta.toLowerCase().includes(busqueda.toLowerCase()) ||
+      a.raza.toLowerCase().includes(busqueda.toLowerCase())
+    );
   }, [animales, busqueda]);
 
   if (cargando) return <div className="p-10 text-center uppercase font-black text-slate-400">Sincronizando...</div>;
