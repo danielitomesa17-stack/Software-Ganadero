@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { 
-  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History 
-} from 'lucide-react';
-
+import { Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History} from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
+const URL_BASE = 'https://software-ganadero.onrender.com/api/animales';
 const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -22,12 +21,6 @@ const InventarioLista = () => {
   };
 
   const [formData, setFormData] = useState(estadoInicial);
-
-  // 🌐 Configuración dinámica de la URL base (Limpia y segura para el SaaS)
-  const URL_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api/animales'
-    : 'https://software-ganadero.onrender.com/api/animales';
-
   // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
   const getToken = () => {
     const sesion = localStorage.getItem('danubio_session');
