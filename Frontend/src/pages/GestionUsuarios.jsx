@@ -14,7 +14,7 @@ const authenticatedFetch = async (url, token, options = {}) => {
 
   // Si el servidor detecta que el usuario está bloqueado (403), lo expulsamos
   if (res.status === 403) {
-    localStorage.removeItem('token');
+    localStorage.removeItem('danubio_session'); // Asegurado con tu key real
     window.location.href = '/login';
     throw new Error("Usuario bloqueado");
   }
@@ -30,6 +30,7 @@ const GestionUsuarios = ({ token }) => {
     try {
       const res = await authenticatedFetch('https://software-ganadero.onrender.com/api/admin/usuarios', token);
       const data = await res.json();
+      // Aseguramos el mapeo del estado activo
       setUsuarios(Array.isArray(data) ? data.map(u => ({ ...u, activo: !!u.activo })) : []);
     } catch (err) {
       console.error("Error al cargar usuarios:", err);
@@ -49,7 +50,7 @@ const GestionUsuarios = ({ token }) => {
         method: 'PATCH',
         body: JSON.stringify({ activo: !estadoActual ? 1 : 0 })
       });
-      fetchUsuarios();
+      fetchUsuarios(); // Recargamos para ver el cambio visual
     } catch (err) {
       console.error("Error:", err);
       alert("No se pudo cambiar el estado");
@@ -64,10 +65,10 @@ const GestionUsuarios = ({ token }) => {
           method: 'PATCH',
           body: JSON.stringify({ nuevoRol })
         });
-        fetchUsuarios();
+        fetchUsuarios(); // Recargamos para reflejar el nuevo rol
       } catch (err) {
         console.error("Error al cambiar rol:", err);
-        alert("Error de conexión");
+        alert("Error de conexión al cambiar el rol");
       }
     }
   };

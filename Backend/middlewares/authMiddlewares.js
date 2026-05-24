@@ -1,31 +1,53 @@
 import jwt from 'jsonwebtoken';
+import pool from '../config/db.js';
 
-// Backend/middlewares/authMiddleware.js
-import pool from '../config/db.js'; // Ajusta según tu ruta de conexión
-
+/**
+ * Middleware para verificar el token JWT y el estado activo del usuario en la base de datos.
+ */
 export const verificarToken = async (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "Token no proporcionado" });
+    // 1. Obtener el token del encabezado Authorization (Bearer token)
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(" ")[1] : null;
+
+    if (!token) {
+        return res.status(401).json({ success: false, error: "Token no proporcionado" });
+    }
 
     try {
+        // 2. Verificar la firma del JWT
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // --- LA SEGURIDAD ESTÁ AQUÍ ---
-        // Consultamos a la base de datos el estado REAL del usuario
-        const [usuarios] = await pool.query("SELECT activo FROM usuarios WHERE id = ?", [decoded.id]);
+        // 3. Consultar el estado REAL del usuario en la base de datos
+        // Usamos una consulta preparada para mayor seguridad
+        const [usuarios] = await pool.query("SELECT id, activo, rol FROM usuarios WHERE id = ?", [decoded.id]);
         
-        // Si no existe o su estado es 0 (bloqueado), denegamos el paso
-        if (usuarios.length === 0 || usuarios[0].activo === 0) {
-            return res.status(403).json({ error: "Cuenta bloqueada. Acceso denegado." });
+        // 4. Validar si el usuario existe y está activo
+        if (usuarios.length === 0) {
+            return res.status(401).json({ success: false, error: "Usuario no encontrado" });
+        }
+
+        if (usuarios[0].activo === 0) {
+            return res.status(403).json({ success: false, error: "Cuenta bloqueada. Acceso denegado." });
         }
         
-        req.user = decoded;
+        // 5. Inyectar la información del usuario en el objeto request
+        req.user = {
+            id: usuarios[0].id,
+            rol: usuarios[0].rol
+        };
+        
         next();
     } catch (err) {
-        return res.status(401).json({ error: "Token inválido" });
+        // Identificar el tipo de error de JWT para mejor depuración
+        const message = err.name === 'TokenExpiredError' ? 'Token expirado' : 'Token inválido';
+        console.error(`❌ Error de autenticación: ${err.message}`);
+        return res.status(401).json({ success: false, error: message });
     }
 };
 
+/**
+ * Middleware para restringir rutas según el rol del usuario.
+ */
 export const autorizarRoles = (...rolesPermitidos) => {
     return (req, res, next) => {
         if (!req.user || !rolesPermitidos.includes(req.user.rol)) {

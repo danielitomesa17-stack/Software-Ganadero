@@ -8,26 +8,31 @@ import { verificarToken } from './middlewares/authMiddlewares.js';
 
 const app = express();
 
-// Configuración de CORS para permitir peticiones desde tu Frontend
+// Configuración de CORS corregida: Añadido método PATCH para tus botones de bloqueo
 app.use(cors({
-  origin: '*', // O usa tu dominio: 'https://software-ganadero.vercel.app'
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  // Cambia '*' por 'https://software-ganadero.vercel.app' para mayor seguridad
+  origin: '*', 
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 
-// Rutas
-app.use('/api', authRoutes); // Login y registro
-app.use('/api/auth', authRoutes);
+// Rutas Públicas (Login/Registro)
+app.use('/api/auth', authRoutes); 
 
-// PROTEGER RUTAS: Ahora el middleware verifica el token ANTES de entrar a animalRoutes
+// Rutas Protegidas (Middleware verificarToken aplicado antes de entrar a las rutas)
+// Ahora todas las peticiones a estas rutas pasarán por la validación de JWT y estado de usuario
 app.use('/api/animales', verificarToken, animalRoutes); 
 app.use('/api/admin', verificarToken, adminRoutes);
 
+// Manejo de errores global
 app.use((err, req, res, _next) => {
     console.error('❌ Error detectado:', err.message);
-    res.status(500).json({ error: 'Error interno en el servidor' });
+    res.status(500).json({ 
+        success: false, 
+        error: 'Error interno en el servidor' 
+    });
 });
 
 const PORT = process.env.PORT || 3000;
