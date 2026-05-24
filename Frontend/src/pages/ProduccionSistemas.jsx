@@ -6,10 +6,10 @@ import {
   Milk, Droplets, Zap, Trash2, Edit3, X
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { authenticatedFetch } from '../services/api';
 
 const PESO_OBJETIVO = 450; 
 const PRECIO_KILO_ESTIMADO = 8500;
-const API_BASE = 'http://localhost:3000/api';
 
 const ProduccionSistemas = () => {
   const [animales, setAnimales] = useState([]);
@@ -29,11 +29,11 @@ const ProduccionSistemas = () => {
   // --- CARGA DE DATOS ---
   const cargarDatos = async () => {
     try {
-      const resAn = await fetch(`${API_BASE}/animales`);
+      const resAn = await authenticatedFetch('/animales');
       const dataAn = await resAn.json();
       setAnimales(Array.isArray(dataAn) ? dataAn : []);
 
-      const resProd = await fetch(`${API_BASE}/produccion`);
+      const resProd = await authenticatedFetch('/produccion');
       const dataProd = await resProd.json();
       setRegistrosHistorial(Array.isArray(dataProd) ? dataProd : []);
     } catch (error) {
@@ -80,9 +80,8 @@ const ProduccionSistemas = () => {
     };
 
     try {
-      const response = await fetch(`${API_BASE}/produccion`, {
+      const response = await authenticatedFetch('/produccion', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -100,7 +99,7 @@ const ProduccionSistemas = () => {
   const eliminarRegistro = async (id) => {
     if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      await fetch(`${API_BASE}/produccion/${id}`, { method: 'DELETE' });
+      await authenticatedFetch(`/produccion/${id}`, { method: 'DELETE' });
       cargarDatos();
     } catch (error) {
       console.error(error);

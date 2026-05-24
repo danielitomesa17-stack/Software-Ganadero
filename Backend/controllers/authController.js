@@ -25,6 +25,11 @@ export const login = async (req, res) => {
             return res.status(401).json({ success: false, message: 'Credenciales de acceso incorrectas' });
         }
 
+        // 3.5. Verificar si el usuario está bloqueado
+        if (usuario.activo === 0) {
+            return res.status(403).json({ success: false, message: 'Su cuenta ha sido bloqueada. Por favor, contacte al administrador.' });
+        }
+
         // 4. Generar el Token JWT empaquetando el hacienda_id para blindar el SaaS
         const token = jwt.sign(
             { 

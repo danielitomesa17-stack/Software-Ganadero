@@ -1,25 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserX, UserCheck, Loader2, ShieldUser } from 'lucide-react';
-
-// --- FUERA DEL COMPONENTE: Función de red centralizada ---
-const authenticatedFetch = async (url, token, options = {}) => {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  // Si el servidor detecta que el usuario está bloqueado (403), lo expulsamos
-  if (res.status === 403) {
-    localStorage.removeItem('danubio_session'); // Asegurado con tu key real
-    window.location.href = '/login';
-    throw new Error("Usuario bloqueado");
-  }
-  return res;
-};
+import { authenticatedFetch } from '../services/api';
 
 const GestionUsuarios = ({ token }) => {
   const [usuarios, setUsuarios] = useState([]);
@@ -28,7 +9,7 @@ const GestionUsuarios = ({ token }) => {
   const fetchUsuarios = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authenticatedFetch('https://software-ganadero.onrender.com/api/admin/usuarios', token);
+      const res = await authenticatedFetch('/admin/usuarios');
       const data = await res.json();
       // Aseguramos el mapeo del estado activo
       setUsuarios(Array.isArray(data) ? data.map(u => ({ ...u, activo: !!u.activo })) : []);
@@ -38,7 +19,7 @@ const GestionUsuarios = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchUsuarios();
@@ -46,7 +27,7 @@ const GestionUsuarios = ({ token }) => {
 
   const toggleEstadoUsuario = async (id, estadoActual) => {
     try {
-      await authenticatedFetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/estado`, token, {
+      await authenticatedFetch(`/admin/usuarios/${id}/estado`, {
         method: 'PATCH',
         body: JSON.stringify({ activo: !estadoActual ? 1 : 0 })
       });
@@ -61,7 +42,7 @@ const GestionUsuarios = ({ token }) => {
     const nuevoRol = prompt("Ingrese el nuevo rol (Administrador / Operador):", rolActual);
     if (nuevoRol && nuevoRol !== rolActual) {
       try {
-        await authenticatedFetch(`https://software-ganadero.onrender.com/api/admin/usuarios/${id}/rol`, token, {
+        await authenticatedFetch(`/admin/usuarios/${id}/rol`, {
           method: 'PATCH',
           body: JSON.stringify({ nuevoRol })
         });

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { authenticatedFetch } from '../services/api';
 import GestionUsuarios from './GestionUsuarios';
 import BitacoraAuditoria from './BitacoraAuditoria';
 
@@ -11,15 +12,10 @@ const PanelAdmin = ({ token }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setCargando(true);
-    const API_BASE = 'https://software-ganadero.onrender.com/api/admin/crear-cliente';
 
     try {
-      const res = await fetch(API_BASE, {
+      const res = await authenticatedFetch('/admin/crear-cliente', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
-        },
         body: JSON.stringify(form)
       });
       

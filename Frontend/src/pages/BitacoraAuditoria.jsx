@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
-import { Filter } from 'lucide-react'; // Importación separada para asegurar que se cargue
+import { Clock, Filter } from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
 
 const BitacoraAuditoria = ({ token }) => {
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
-    fetch('https://software-ganadero.onrender.com/api/admin/bitacora', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    authenticatedFetch('/admin/bitacora')
     .then(res => res.json())
     .then(data => {
       // Si el backend devuelve un array, lo guardamos
       setLogs(Array.isArray(data) ? data : []);
     })
     .catch(err => console.error("Error al traer logs:", err));
-  }, [token]);
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

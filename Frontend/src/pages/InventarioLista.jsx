@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History 
 } from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
 
 const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
@@ -23,25 +24,11 @@ const InventarioLista = () => {
 
   const [formData, setFormData] = useState(estadoInicial);
 
-  // 🌐 Configuración dinámica de la URL base (Limpia y segura para el SaaS)
-  const URL_BASE = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api/animales'
-    : 'https://software-ganadero.onrender.com/api/animales';
-
   // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
-  const getToken = () => {
-    const sesion = localStorage.getItem('danubio_session');
-    return sesion ? JSON.parse(sesion).token : null;
-  };
   const cargarAnimales = useCallback(async () => {
-    const token = getToken();
-    if (!token) { setCargando(false); return; }
     try {
       setCargando(true);
-      const res = await fetch(URL_BASE, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
+      const res = await authenticatedFetch('/animales');
       
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const datos = await res.json();
@@ -63,17 +50,16 @@ const InventarioLista = () => {
     } finally {
       setCargando(false); 
     }
-  }, [URL_BASE]);
+  }, []);
 
   useEffect(() => { cargarAnimales(); }, [cargarAnimales]);
+  
   // 2. REGISTRAR ANIMAL 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    const token = getToken();
     try {
-      const res = await fetch(URL_BASE, {
+      const res = await authenticatedFetch('/animales', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           caravana_id: formData.chapeta.toUpperCase(),
           peso_inicial: Number(formData.peso),
@@ -91,13 +77,11 @@ const InventarioLista = () => {
     } catch { alert("Error de conexión"); }
   };
 
-    const handleActualizar = async (e) => {
+  const handleActualizar = async (e) => {
     e.preventDefault();
-    const token = getToken();
     try {
-      const res = await fetch(`${URL_BASE}/${editingAnimal.id}`, {
+      const res = await authenticatedFetch(`/animales/${editingAnimal.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
           estado: editingAnimal.estado,
@@ -113,9 +97,8 @@ const InventarioLista = () => {
 
   const eliminarAnimal = async (id) => {
     if (!window.confirm("¿Eliminar este registro?")) return;
-    const token = getToken();
     try {
-      await fetch(`${URL_BASE}/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      await authenticatedFetch(`/animales/${id}`, { method: 'DELETE' });
       await cargarAnimales();
     } catch { alert("Error al eliminar"); }
   };

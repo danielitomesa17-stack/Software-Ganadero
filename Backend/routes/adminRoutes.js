@@ -5,17 +5,7 @@ import { crearNuevaHacienda, obtenerBitacora, obtenerUsuarios, cambiarEstadoUsua
 const router = express.Router();
 
 // adminRoutes.js
-router.put('/usuarios/:id/estado', verificarToken, autorizarRoles('SuperAdmin'), async (req, res) => {
-    const { id } = req.params;
-    const { activo } = req.body; // Recibirás 0 para bloquear, 1 para activar
 
-    try {
-        await pool.query("UPDATE usuarios SET activo = ? WHERE id = ?", [activo, id]);
-        res.json({ success: true, message: "Estado actualizado correctamente" });
-    } catch (error) {
-        res.status(500).json({ error: "Error al actualizar estado" });
-    }
-});
 
 // Middleware aplicado a TODAS las rutas de este archivo
 router.use(verificarToken, autorizarRoles('SuperAdmin'));
