@@ -12,7 +12,7 @@ export const getAnimales = async (req, res) => {
 
         // 🚨 CORREGIDO: Se cambió 'hacienda_id' por 'Hacienda_id' para que coincida con tu MySQL Workbench
         const [results] = await db.query(
-            "SELECT * FROM animales WHERE Hacienda_id = ? ORDER BY id DESC", 
+            "SELECT * FROM animales WHERE Hacienda_id = ? ORDER BY id DESC",
             [haciendaId]
         );
         
@@ -39,7 +39,7 @@ export const registrarAnimal = async (req, res) => {
 
         // Query configurado con la H mayúscula en 'Hacienda_id'
         const sql = `INSERT INTO animales 
-            (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, Hacienda_id, historial) 
+            (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const [result] = await db.query(sql, [
@@ -73,7 +73,7 @@ export const actualizarAnimal = async (req, res) => {
     try {
         // Validamos que el animal exista Y pertenezca a esta hacienda
         const [results] = await db.query(
-            "SELECT historial FROM animales WHERE id = ? AND Hacienda_id = ?", 
+            "SELECT historial FROM animales WHERE id = ? AND hacienda_id = ?",
             [id, haciendaId]
         );
         if (results.length === 0) return res.status(404).json({ error: "Animal no encontrado en tu hacienda" });
@@ -91,7 +91,7 @@ export const actualizarAnimal = async (req, res) => {
         historial.push({ fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_actual) });
 
         // Actualizamos aplicando el doble candado de seguridad (id y Hacienda_id)
-        const sql = "UPDATE animales SET peso_actual = ?, estado = ?, lote = ?, historial = ? WHERE id = ? AND Hacienda_id = ?";
+        const sql = "UPDATE animales SET peso_actual = ?, estado = ?, lote = ?, historial = ? WHERE id = ? AND hacienda_id = ?";
         await db.query(sql, [Number(peso_actual), estado, lote, JSON.stringify(historial), id, haciendaId]);
         
         res.json({ message: "Pesaje actualizado correctamente" });
@@ -112,7 +112,7 @@ export const eliminarAnimal = async (req, res) => {
     try {
         // Evita que un usuario borre animales de otra finca alterando el ID en la URL
         const [result] = await db.query(
-            "DELETE FROM animales WHERE id = ? AND Hacienda_id = ?", 
+            "DELETE FROM animales WHERE id = ? AND hacienda_id = ?",
             [id, haciendaId]
         );
         

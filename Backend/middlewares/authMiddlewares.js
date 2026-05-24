@@ -33,7 +33,8 @@ export const verificarToken = async (req, res, next) => {
         // 5. Inyectar la información del usuario en el objeto request
         req.user = {
             id: usuarios[0].id,
-            rol: usuarios[0].rol
+            rol: usuarios[0].rol,
+            haciendaId: decoded.haciendaId
         };
         
         next();
