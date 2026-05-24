@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Mail, Loader2, AlertCircle } from 'lucide-react';
 // Volvemos a tu instancia centralizada de Axios
-import api from '../axios/axios'; 
+import api from '../axios/axios';
 
 const Login = ({ onLogin }) => {
   const [credenciales, setCredenciales] = useState({ email: '', password: '' });
@@ -27,15 +27,15 @@ const Login = ({ onLogin }) => {
         onLogin(response.data);
       } else {
         // En caso de recibir respuesta pero con success en false
-        setError(response.data?.message || 'Credenciales de acceso incorrectas');
+        setError(response.data?.message || response.data?.error || 'Credenciales de acceso incorrectas');
       }
 
     } catch (err) {
       console.error("El error cayó correctamente en el catch:", err);
-      
+
       // Captura ultra segura de la respuesta de error (evita que explote si err.response es undefined)
       if (err.response && err.response.data) {
-        setError(err.response.data.message || 'Credenciales de acceso incorrectas');
+        setError(err.response.data.message || err.response.data.error || 'Credenciales de acceso incorrectas');
       } else {
         setError('Error de conexión con el servidor de la Hacienda');
       }
@@ -47,18 +47,18 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 font-sans relative bg-cover bg-center" 
+    <div
+      className="min-h-screen flex items-center justify-center p-4 font-sans relative bg-cover bg-center"
       style={{ backgroundImage: "url('/Logo.svg')" }}
     >
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"></div>
 
       <div className="w-full max-w-md bg-white/70 backdrop-blur-md rounded-[2.5rem] shadow-2xl p-8 md:p-12 z-10 border border-white/40">
-        
+
         {/* Encabezado */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center mx-auto mb-6 drop-shadow-lg rotate-3 transition-transform hover:rotate-0 duration-500">
-             <img src="/Logo.svg" alt="Logo" className="w-24 h-24 object-contain" />
+            <img src="/Logo.svg" alt="Logo" className="w-24 h-24 object-contain" />
           </div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase">
             Software <span className="text-green-700">Ganadero</span>
