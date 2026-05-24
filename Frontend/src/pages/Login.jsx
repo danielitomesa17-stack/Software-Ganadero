@@ -20,7 +20,7 @@ const Login = ({ onLogin }) => {
 
     try {
       // Consumimos el endpoint usando tu configuración base
-      const response = await api.post('/login', credenciales);
+      const response = await api.post('/auth/login', credenciales);
 
       // ⚠️ VALIDACIÓN CRUCIAL: Solo pasamos si el backend explícitamente dice success: true
       if (response.data && response.data.success === true) {

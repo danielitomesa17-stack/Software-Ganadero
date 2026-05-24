@@ -31,6 +31,7 @@ export const login = async (req, res) => {
         }
 
         // 4. Generar el Token JWT empaquetando el hacienda_id para blindar el SaaS
+        console.log('DEBUG: JWT secret =', process.env.JWT_SECRET);
         const token = jwt.sign(
             { 
                 id: usuario.id, 
@@ -58,6 +59,10 @@ export const login = async (req, res) => {
     } catch (error) {
         // Cualquier fallo de conexión con Aiven caerá aquí de inmediato
         console.error("❌ Error crítico en el proceso de Login:", error);
+        // Enviar detalle del error al cliente solo en modo desarrollo
+        if (process.env.NODE_ENV === 'development') {
+            return res.status(500).json({ success: false, error: error.message, stack: error.stack });
+        }
         return res.status(500).json({ success: false, error: 'Error interno del servidor al procesar el ingreso.' });
     }
 };
