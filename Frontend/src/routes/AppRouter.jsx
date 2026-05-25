@@ -81,7 +81,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
               <Route path="reportes" element={<ReportesSistemas />} />
               <Route path="produccion" element={<ProduccionSistemas />} />
               <Route path="sanidad" element={<SanidadSistemas />} />
-              <Route path="farmacia" element={<MedicamentosInventario />} />
+              <Route path="medicamentos" element={<MedicamentosInventario />} />
               <Route path="gastos" element={<GastosSistemas />} />
               {/* RUTA PROTEGIDA PARA ADMIN */}
               <Route 
