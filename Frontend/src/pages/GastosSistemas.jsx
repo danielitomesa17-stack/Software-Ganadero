@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { authenticatedFetch } from '../services/api';
 import jwt_decode from 'jwt-decode';
-import jwt_decode from 'jwt-decode';
+
 
 const GastosSistemas = () => {
   const [gastos, setGastos] = useState([]);
