@@ -54,6 +54,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Análisis</span>}
           </Link>
 
+          <Link to="/app/medicamentos" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/medicamentos') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Pill size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Medicamentos</span>}
+          </Link>
+
           <Link to="/app/gastos" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/gastos') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800'}`}> 
             <Wallet size={22} />
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Gastos</span>}
