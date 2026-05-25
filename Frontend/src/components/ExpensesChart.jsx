@@ -33,9 +33,16 @@ const ExpensesChart = ({ gastos }) => {
   const categories = Object.keys(dataByCategory);
   const totals = Object.values(dataByCategory);
 
-  // Paleta de colores premium (HSL suave)
-  const backgroundColors = categories.map((_, i) => `hsl(${(i * 60) % 360}, 70%, 60%)`);
-  const borderColors = categories.map((_, i) => `hsl(${(i * 60) % 360}, 70%, 40%)`);
+  // Paleta de colores alineada con el tema de la aplicación (Tailwind teal, amber, rose, violet, emerald)
+  const themeColors = [
+    '#0ea5e9', // teal-500
+    '#f59e0b', // amber-500
+    '#f43f5e', // rose-500
+    '#8b5cf6', // violet-500
+    '#10b981', // emerald-500
+  ];
+  const backgroundColors = categories.map((_, i) => themeColors[i % themeColors.length] + '66'); // 40% opacity
+  const borderColors = categories.map((_, i) => themeColors[i % themeColors.length]);
 
   const barData = {
     labels: categories,
