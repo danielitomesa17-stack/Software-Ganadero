@@ -297,7 +297,7 @@ const GastosSistemas = () => {
       </div>
 
 
-  </div>
+
 );
 };
 
