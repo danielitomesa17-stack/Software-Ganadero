@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Edit3, Save, X, Plus, BadgeDollarSign, Trash2 } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
 
-// Simple JWT decode without external library
+
 function decodeJwt (token) {
   try {
     const payload = token.split('.')[1];
@@ -15,6 +16,7 @@ function decodeJwt (token) {
 
 
 const GastosSistemas = () => {
+  const [editandoId, setEditandoId] = useState(null);
   const [gastos, setGastos] = useState([]);
   const [loading, setLoading] = useState(true);
 
