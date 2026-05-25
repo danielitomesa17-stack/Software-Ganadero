@@ -188,9 +188,9 @@ const GastosSistemas = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20 max-w-7xl mx-auto px-4 lg:px-8">
       {/* HEADER DINÁMICO */}
-      <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
+      <div className="bg-slate-900/80 backdrop-blur-lg rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
         <div className="relative z-10">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2 italic">
             {editandoId ? 'Editando Registro...' : `Egresos ${filtroCategoria}`}
@@ -202,9 +202,9 @@ const GastosSistemas = () => {
           <BadgeDollarSign size={140} className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12" />
           {/* Removed duplicate chart */}
       </div>
-              <div className="w-full max-w-4xl mx-auto my-4">
-          <ExpensesChart gastos={gastosFiltrados} />
-        </div>
+              <div className="w-full max-w-5xl mx-auto my-8 p-6 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 h-96 flex items-center justify-center">
+  <ExpensesChart gastos={gastosFiltrados} />
+</div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* FORMULARIO ADAPTATIVO */}
