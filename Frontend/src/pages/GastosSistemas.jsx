@@ -202,7 +202,9 @@ const GastosSistemas = () => {
           <BadgeDollarSign size={140} className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12" />
           {/* Removed duplicate chart */}
       </div>
-      <ExpensesChart gastos={gastosFiltrados} />
+              <div className="w-full max-w-4xl mx-auto my-4">
+          <ExpensesChart gastos={gastosFiltrados} />
+        </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* FORMULARIO ADAPTATIVO */}
