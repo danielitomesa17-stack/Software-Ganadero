@@ -18,10 +18,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Parse JSON bodies
+app.use(express.json());
+
 // Rutas protegidas (middleware verificarToken aplicado antes de entrar a las rutas)
 app.use('/api/gastos', verificarToken, gastoRoutes);
-
-app.use(express.json());
 
 // Rutas Públicas (Login/Registro)
 app.use('/api/auth', authRoutes); 

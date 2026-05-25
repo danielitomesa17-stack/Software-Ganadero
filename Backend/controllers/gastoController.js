@@ -21,6 +21,7 @@ const gastoController = {
   // 2. Crear un nuevo gasto (manual o desde farmacia) adjuntando hacienda_id
   createGasto: async (req, res, next) => {
     try {
+      console.log('🔧 crear gasto - req.body:', req.body);
       const payload = {
         concepto: req.body.concepto.toUpperCase(),
         monto: parseFloat(req.body.monto),
@@ -35,8 +36,9 @@ const gastoController = {
       });
     } catch (error) {
       console.error('Error al crear gasto:', error);
-      // Enviar respuesta clara para que el frontend muestre el mensaje
-      res.status(500).json({ success: false, message: 'Error al crear el gasto', error: error.message });
+      // Enviar respuesta clara con mensaje del backend para depuración
+      const msg = error?.sqlMessage || error?.message || 'Error al crear el gasto';
+      res.status(500).json({ success: false, message: msg });
     }
   },
 
@@ -48,7 +50,9 @@ const gastoController = {
       const payload = {
         concepto: req.body.concepto ? req.body.concepto.toUpperCase() : undefined,
         monto: req.body.monto ? parseFloat(req.body.monto) : undefined,
-        categoria: req.body.categoria
+        categoria: req.body.categoria,
+        // Añadir hacienda_id del token para que la actualización tenga referencia
+        hacienda_id: req.user?.hacienda_id || req.user?.haciendaId
       };
       // Eliminar propiedades undefined para evitar actualizar con NULL
       Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
@@ -61,8 +65,9 @@ const gastoController = {
       });
     } catch (error) {
       console.error('Error al actualizar gasto:', error);
-      // Enviamos respuesta clara para que el front capture el mensaje
-      res.status(500).json({ success: false, message: 'Error al actualizar el gasto' });
+      // Enviamos respuesta clara con mensaje de error del backend
+      const msg = error?.sqlMessage || error?.message || 'Error al actualizar el gasto';
+      res.status(500).json({ success: false, message: msg });
     }
   },
 
