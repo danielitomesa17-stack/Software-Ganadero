@@ -39,6 +39,25 @@ app.use((err, req, res, _next) => {
 });
 
 const PORT = process.env.PORT || 3000;
+app.get('/test', (req, res) => res.json({ success: true, message: 'test route works' }));
+
+import jwt from 'jsonwebtoken';
+
+// DEBUG endpoint to verify JWT manually
+app.get('/debug-token', (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  if (!token) {
+    return res.status(400).json({ success: false, error: 'Token no enviado' });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return res.json({ success: true, decoded });
+  } catch (err) {
+    console.error('🔎 Debug token error:', err.message);
+    return res.status(401).json({ success: false, error: err.message });
+  }
+});
 app.listen(PORT, () => {
     console.log(`🚀 Servidor modular Hacienda Danubio en puerto ${PORT}`);
 });
