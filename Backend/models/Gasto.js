@@ -1,4 +1,4 @@
-const pool = require('../../config/db'); // Adjusted path if needed
+import pool from '../config/db.js'; // Correct path for ES module
 
 class Gasto {
     // MÉTODO PARA TRAER TODO DE MYSQL
