@@ -9,15 +9,17 @@ import adminRoutes from './routes/adminRoutes.js';
 import { verificarToken } from './middlewares/authMiddlewares.js';
 
 const app = express();
-app.use('/api/gastos', verificarToken, gastoRoutes);
 
-// Configuración de CORS corregida: Añadido método PATCH para tus botones de bloqueo
+// Configuración de CORS corregida: se aplica antes de cualquier ruta
 app.use(cors({
   // Cambia '*' por 'https://software-ganadero.vercel.app' para mayor seguridad
-  origin: '*', 
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Rutas protegidas (middleware verificarToken aplicado antes de entrar a las rutas)
+app.use('/api/gastos', verificarToken, gastoRoutes);
 
 app.use(express.json());
 
