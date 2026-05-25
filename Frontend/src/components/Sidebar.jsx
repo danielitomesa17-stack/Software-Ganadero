@@ -55,7 +55,7 @@ const Sidebar = ({ sidebarOpen }) => {
     },
     { path: '/app/farmacia', name: 'Farmacia', icon: Pill, color: 'hover:text-amber-400' },
     { path: '/app/reportes', name: 'Reportes y Análisis', icon: BarChart3, color: 'hover:text-rose-400' },
-    { path: '/app/gastos', name: 'Finanzas / Gastos', icon: Wallet, color: 'hover:text-slate-100' },
+    { path: '/app/gastos', name: 'Gastos', icon: Wallet, color: 'hover:text-slate-100' },
   ];
 
   return (

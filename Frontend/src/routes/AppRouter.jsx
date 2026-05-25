@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Milk, Menu, LogOut, 
-  ChevronRight, ShieldCheck, Pill, BarChart3, Settings 
+  ChevronRight, ShieldCheck, Pill, BarChart3, Wallet, Settings 
 } from 'lucide-react';
 
 // Importaciones de Páginas
@@ -53,6 +53,12 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             <BarChart3 size={22} />
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Análisis</span>}
           </Link>
+
+          <Link to="/app/gastos" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/gastos') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800'}`}> 
+            <Wallet size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Gastos</span>}
+          </Link>
+
           {/* ... otros links (Producción, Sanidad, Farmacia) */}
         </nav>
 
@@ -76,6 +82,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
               <Route path="produccion" element={<ProduccionSistemas />} />
               <Route path="sanidad" element={<SanidadSistemas />} />
               <Route path="farmacia" element={<MedicamentosInventario />} />
+              <Route path="gastos" element={<GastosSistemas />} />
               {/* RUTA PROTEGIDA PARA ADMIN */}
               <Route 
                 path="admin" 
