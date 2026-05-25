@@ -233,15 +233,6 @@ const GastosSistemas = () => {
                 value={nuevoGasto.monto}
                 onChange={(e) => setNuevoGasto({...nuevoGasto, monto: e.target.value})}
               />
-              <select 
-                className="w-full p-4 bg-white/50 rounded-2xl font-bold text-xs outline-none"
-                value={nuevoGasto.categoria}
-                onChange={(e) => setNuevoGasto({...nuevoGasto, categoria: e.target.value})}
-              >
-                {categorias.filter(c => c !== 'TODOS').map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
 
               <div className="flex gap-2">
                 <button type="submit" className={`flex-1 py-5 text-white font-black rounded-3xl uppercase text-[10px] tracking-[0.2em] shadow-lg transition-all flex items-center justify-center gap-2 ${editandoId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-green-600 hover:bg-green-700'}`}>
@@ -258,7 +249,7 @@ const GastosSistemas = () => {
         </div>
         {/* TABLA CON BOTÓN EDITAR */}
         <div className="lg:col-span-8">
-          <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] border border-slate-800">
+          <div className="p-4 flex items-center gap-2 bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] border border-slate-800">
             <input
               type="text"
               placeholder="Buscar por concepto..."
