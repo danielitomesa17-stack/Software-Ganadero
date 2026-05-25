@@ -75,14 +75,18 @@ const ExpensesChart = ({ gastos }) => {
   };
 
   return (
-    <div className="grid gap-4 grid-cols-1" style={{ height: 'auto' }}>
-      <div className="bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 shadow-xl" style={{ height: '400px' }}>
+    <div className="grid gap-4 md:grid-cols-2" style={{ minHeight: '400px' }}>
+      <div className="bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 shadow-xl flex flex-col">
         <h3 className="text-sm font-medium text-gray-200 mb-2">Gastos por Categoría (Barras)</h3>
-        <Bar data={barData} options={options} />
+        <div className="flex-1">
+          <Bar data={barData} options={options} />
+        </div>
       </div>
-      <div className="bg-slate-900/60 backdrop-filter backdrop-blur-lg rounded-2xl p-4 shadow-xl" style={{ height: '400px' }}>
+      <div className="bg-slate-900/60 backdrop-blur-lg rounded-2xl p-4 shadow-xl flex flex-col">
         <h3 className="text-sm font-medium text-gray-200 mb-2">Gastos por Categoría (Pastel)</h3>
-        <Pie data={pieData} options={options} />
+        <div className="flex-1">
+          <Pie data={pieData} options={options} />
+        </div>
       </div>
     </div>
   );
