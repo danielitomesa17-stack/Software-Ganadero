@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import gastoController from '../../controllers/gastoController.js'; // <--- ¡No olvides el .js aquí también!
+import gastoController from '../controllers/gastoController.js';
 
 // Definimos las rutas (EndPoints)
 router.get('/', gastoController.getGastos);         // GET /api/gastos

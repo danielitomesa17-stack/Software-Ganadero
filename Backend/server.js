@@ -3,10 +3,13 @@ import express from 'express';
 import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import gastoRoutes from './routes/gastoRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+
 import { verificarToken } from './middlewares/authMiddlewares.js';
 
 const app = express();
+app.use('/api/gastos', verificarToken, gastoRoutes);
 
 // Configuración de CORS corregida: Añadido método PATCH para tus botones de bloqueo
 app.use(cors({

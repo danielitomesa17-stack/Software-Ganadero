@@ -34,6 +34,7 @@ export const verificarToken = async (req, res, next) => {
         req.user = {
             id: usuarios[0].id,
             rol: usuarios[0].rol,
+            hacienda_id: decoded.hacienda_id || decoded.haciendaId,
             haciendaId: decoded.haciendaId
         };
         
