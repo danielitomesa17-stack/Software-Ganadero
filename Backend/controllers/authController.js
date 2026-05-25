@@ -36,7 +36,8 @@ export const login = async (req, res) => {
             { 
                 id: usuario.id, 
                 rol: usuario.rol,
-                haciendaId: usuario.hacienda_id // 👈 Inyección SaaS: viaja encriptado en el token
+                hacienda_id: usuario.hacienda_id,
+                haciendaId: usuario.hacienda_id // keep for compatibility
             },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }

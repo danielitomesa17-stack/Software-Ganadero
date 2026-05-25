@@ -32,7 +32,7 @@ export const authenticatedFetch = async (endpoint, options = {}) => {
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': token ? `Bearer ${token}` : '',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
       ...options.headers
     }
