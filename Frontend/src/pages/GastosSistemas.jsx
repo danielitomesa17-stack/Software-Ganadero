@@ -202,11 +202,15 @@ const GastosSistemas = () => {
           <BadgeDollarSign size={140} className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12" />
           {/* Removed duplicate chart */}
       </div>
-              <div className="w-full max-w-5xl mx-auto my-8 p-6 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 h-96 flex items-center justify-center">
-  <ExpensesChart gastos={gastosFiltrados} />
-</div>
-
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* CHART */}
+        <div className="lg:col-span-12 mb-8">
+                    <div className="w-full max-w-5xl mx-auto p-6 bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 h-96 flex items-center justify-center">
+            <div className="w-full h-full">
+              <ExpensesChart gastos={gastosFiltrados} />
+            </div>
+          </div>
+        </div>
         {/* FORMULARIO ADAPTATIVO */}
         <div className="lg:col-span-4">
           <div className={`p-8 rounded-[3rem] shadow-xl border transition-all duration-500 ${editandoId ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100'}`}>
@@ -256,7 +260,8 @@ const GastosSistemas = () => {
         {/* TABLA CON BOTÓN EDITAR */}
         <div className="lg:col-span-8">
           <div className="bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] shadow-xl border border-slate-800 overflow-hidden">
-            <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            {/* FILTRO DE BÚSQUEDA Y CATEGORÍA */}
+            <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] border border-slate-800">
               <input
                 type="text"
                 placeholder="Buscar por concepto..."
@@ -265,7 +270,7 @@ const GastosSistemas = () => {
                 className="flex-1 p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30"
               />
               <select
-                className="p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30"
+                className="p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30 w-full sm:w-auto"
                 value={filtroCategoria}
                 onChange={e => setFiltroCategoria(e.target.value)}
               >
@@ -274,7 +279,9 @@ const GastosSistemas = () => {
                 ))}
               </select>
             </div>
+            {/* TABLA DE GASTOS */}
             <div className="grid gap-4 md:grid-cols-2 p-4">
+
               {gastosFiltrados.map(g => (
                 <div key={g.id} className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 shadow-lg border border-slate-700 hover:bg-white/20 transition-colors">
                   <h3 className="text-sm font-bold text-white mb-2">{g.concepto}</h3>
