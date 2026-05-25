@@ -34,7 +34,9 @@ const gastoController = {
         id: nuevoGastoId,
       });
     } catch (error) {
-      next(error);
+      console.error('Error al crear gasto:', error);
+      // Enviar respuesta clara para que el frontend muestre el mensaje
+      res.status(500).json({ success: false, message: 'Error al crear el gasto', error: error.message });
     }
   },
 
@@ -42,13 +44,25 @@ const gastoController = {
   updateGasto: async (req, res, next) => {
     try {
       const { id } = req.params;
-      await Gasto.update(id, req.body);
+      // Normalizar datos provenientes del formulario
+      const payload = {
+        concepto: req.body.concepto ? req.body.concepto.toUpperCase() : undefined,
+        monto: req.body.monto ? parseFloat(req.body.monto) : undefined,
+        categoria: req.body.categoria
+      };
+      // Eliminar propiedades undefined para evitar actualizar con NULL
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+      console.log('Actualizar gasto payload:', payload);
+      await Gasto.update(id, payload);
+
       res.status(200).json({
         success: true,
-        message: 'Gasto actualizado correctamente',
+        message: 'Gasto actualizado correctamente'
       });
     } catch (error) {
-      next(error);
+      console.error('Error al actualizar gasto:', error);
+      // Enviamos respuesta clara para que el front capture el mensaje
+      res.status(500).json({ success: false, message: 'Error al actualizar el gasto' });
     }
   },
 

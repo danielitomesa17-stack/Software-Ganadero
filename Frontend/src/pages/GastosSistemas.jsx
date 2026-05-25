@@ -92,7 +92,11 @@ const GastosSistemas = () => {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('Error al actualizar gasto');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Error response:', errData);
+          throw new Error(errData.message || 'Error al actualizar gasto');
+        }
         // Refrescar lista
         const refreshed = await authenticatedFetch('/gastos');
         const data = await refreshed.json();
@@ -110,7 +114,11 @@ const GastosSistemas = () => {
           method: 'POST',
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('Error al crear gasto');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('Error response:', errData);
+          throw new Error(errData.message || 'Error al crear gasto');
+        }
         // Refrescar lista
         const refreshed = await authenticatedFetch('/gastos');
         const data = await refreshed.json();

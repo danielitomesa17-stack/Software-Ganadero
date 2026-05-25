@@ -25,12 +25,27 @@ class Gasto {
 
     // MÉTODO PARA ACTUALIZAR (EDITAR)
     static async update(id, datos) {
-        const { concepto, monto, categoria } = datos;
-        const sql = `UPDATE gastos SET concepto = ?, monto = ?, categoria = ? 
-                     WHERE id = ?`;
-        await pool.query(sql, [concepto, monto, categoria, id]);
-        return true;
+    // Build dynamic SET clause based on provided fields to avoid undefined values
+    const fields = [];
+    const values = [];
+    if (datos.concepto !== undefined) {
+      fields.push('concepto = ?');
+      values.push(datos.concepto);
     }
+    if (datos.monto !== undefined) {
+      fields.push('monto = ?');
+      values.push(datos.monto);
+    }
+    if (datos.categoria !== undefined) {
+      fields.push('categoria = ?');
+      values.push(datos.categoria);
+    }
+    if (fields.length === 0) return true; // nothing to update
+    const setClause = fields.join(', ');
+    const sql = `UPDATE gastos SET ${setClause} WHERE id = ?`;
+    await pool.query(sql, [...values, id]);
+    return true;
+  }
 
     // MÉTODO PARA ELIMINAR
     static async delete(id) {
