@@ -1,18 +1,53 @@
 import pool from '../config/db.js'; // Correct path for ES module
 
 class Gasto {
-    // MÉTODO PARA TRAER TODO DE MYSQL
-    static async findAll(filter = {}) {
-    let sql = 'SELECT * FROM gastos';
-    const params = [];
-    if (filter.hacienda_id) {
-      sql += ' WHERE hacienda_id = ?';
-      params.push(filter.hacienda_id);
+    // MÉTODO PARA CONTAR GASTOS CON LOS MISMOS FILTROS
+    static async count(filter = {}) {
+        let sql = 'SELECT COUNT(*) as total FROM gastos';
+        const params = [];
+        const conditions = [];
+        if (filter.hacienda_id) {
+            conditions.push('hacienda_id = ?');
+            params.push(filter.hacienda_id);
+        }
+        if (filter.fechaDesde && filter.fechaHasta) {
+            conditions.push('fecha BETWEEN ? AND ?');
+            params.push(filter.fechaDesde, filter.fechaHasta);
+        }
+        if (conditions.length) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+        const [rows] = await pool.query(sql, params);
+        return rows[0].total;
     }
-    sql += ' ORDER BY fecha DESC';
-    const [rows] = await pool.query(sql, params);
-    return rows;
-  }
+
+    // MÉTODO PARA TRAER TODO DE MYSQL CON OPCIONES DE PÁGINA
+    static async findAll(filter = {}) {
+        let sql = 'SELECT * FROM gastos';
+        const params = [];
+        const conditions = [];
+        if (filter.hacienda_id) {
+            conditions.push('hacienda_id = ?');
+            params.push(filter.hacienda_id);
+        }
+        if (filter.fechaDesde && filter.fechaHasta) {
+            conditions.push('fecha BETWEEN ? AND ?');
+            params.push(filter.fechaDesde, filter.fechaHasta);
+        }
+        if (filter.limit) {
+            // limit and offset must come after any WHERE clause
+            if (conditions.length) sql += ' WHERE ' + conditions.join(' AND ');
+            sql += ' ORDER BY fecha DESC LIMIT ? OFFSET ?';
+            params.push(parseInt(filter.limit, 10), parseInt(filter.offset || 0, 10));
+        } else {
+            if (conditions.length) {
+                sql += ' WHERE ' + conditions.join(' AND ');
+            }
+            sql += ' ORDER BY fecha DESC';
+        }
+        const [rows] = await pool.query(sql, params);
+        return rows;
+    }
 
     // MÉTODO PARA INSERTAR UN GASTO (MANUAL O DESDE FARMACIA)
     static async create(datos) {

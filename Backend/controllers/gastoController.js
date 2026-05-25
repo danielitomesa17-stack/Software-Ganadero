@@ -10,9 +10,28 @@ const gastoController = {
   getGastos: async (req, res, next) => {
     try {
       const haciendaId = req.user?.haciendaId || req.user?.hacienda_id;
-      // Llamamos al modelo pasando directamente el filtro esperado (hacienda_id)
-      const gastos = await Gasto.findAll({ hacienda_id: haciendaId });
-      res.status(200).json({ success: true, data: gastos });
+      const { fechaDesde, fechaHasta, limit, page } = req.query;
+      const filter = { hacienda_id: haciendaId };
+      if (fechaDesde && fechaHasta) {
+        filter.fechaDesde = fechaDesde;
+        filter.fechaHasta = fechaHasta;
+      }
+      // Pagination params (optional)
+      const pageNum = parseInt(page, 10) || 1;
+      const limitNum = parseInt(limit, 10);
+      if (limitNum) {
+        filter.limit = limitNum;
+        filter.offset = (pageNum - 1) * limitNum;
+      }
+      const [gastos, total] = await Promise.all([
+        Gasto.findAll(filter),
+        Gasto.count({ hacienda_id: haciendaId, fechaDesde, fechaHasta })
+      ]);
+      res.status(200).json({
+        success: true,
+        data: gastos,
+        meta: { total, page: pageNum, limit: limitNum || null }
+      });
     } catch (error) {
       next(error);
     }

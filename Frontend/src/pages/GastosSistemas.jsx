@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Edit3, Save, X, Plus, BadgeDollarSign, Trash2 } from 'lucide-react';
+import ExpensesChart from '../components/ExpensesChart';
 import { authenticatedFetch } from '../services/api';
 
 
@@ -22,6 +23,7 @@ const GastosSistemas = () => {
 
   const [nuevoGasto, setNuevoGasto] = useState({ concepto: '', monto: '', categoria: 'GENERAL' });
   const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
+  const [searchTerm, setSearchTerm] = useState('');
   
   // --- NUEVO: ESTADO PARA SABER QUÉ GASTO EDITAMOS ---
   // Obtener hacienda_id del JWT almacenado en la sesión
@@ -67,9 +69,20 @@ const GastosSistemas = () => {
   }, [haciendaId]);
 
   const gastosFiltrados = useMemo(() => {
-    if (filtroCategoria === 'TODOS') return gastos;
-    return gastos.filter(g => g.categoria === filtroCategoria);
-  }, [gastos, filtroCategoria]);
+    let filtrado = gastos;
+    if (filtroCategoria !== 'TODOS') {
+      filtrado = filtrado.filter(g => g.categoria === filtroCategoria);
+    }
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      filtrado = filtrado.filter(g =>
+        g.concepto?.toLowerCase().includes(term) ||
+        g.categoria?.toLowerCase().includes(term) ||
+        `${g.monto}`.includes(term)
+      );
+    }
+    return filtrado;
+  }, [gastos, filtroCategoria, searchTerm]);
 
   const totalDinero = useMemo(() => {
     return gastosFiltrados.reduce((acc, item) => acc + (parseFloat(item.monto) || 0), 0);
@@ -240,6 +253,24 @@ const GastosSistemas = () => {
         {/* TABLA CON BOTÓN EDITAR */}
         <div className="lg:col-span-8">
           <div className="bg-white rounded-[3.5rem] shadow-xl border border-slate-100 overflow-hidden">
+            <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <input
+                type="text"
+                placeholder="Buscar por concepto..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="flex-1 p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30"
+              />
+              <select
+                className="p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30"
+                value={filtroCategoria}
+                onChange={e => setFiltroCategoria(e.target.value)}
+              >
+                {categorias.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="bg-slate-50/50">
