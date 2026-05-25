@@ -18,7 +18,7 @@ class Gasto {
     static async create(datos) {
         const { fecha, concepto, monto, categoria } = datos;
         const sql = `INSERT INTO gastos (fecha, concepto, monto, categoria, hacienda_id) 
-                     VALUES (?, ?, ?, ?, ?)`;
+                     VALUES (COALESCE(?, NOW()), ?, ?, ?, ?)`;
         const [result] = await pool.query(sql, [fecha, concepto, monto, categoria, datos.hacienda_id]);
         return result.insertId;
     }

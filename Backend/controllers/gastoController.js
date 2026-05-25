@@ -21,9 +21,13 @@ const gastoController = {
   // 2. Crear un nuevo gasto (manual o desde farmacia) adjuntando hacienda_id
   createGasto: async (req, res, next) => {
     try {
-      const haciendaId = req.user?.haciendaId || req.user?.hacienda_id;
-      const bodyConHacienda = { ...req.body, hacienda_id: haciendaId };
-      const nuevoGastoId = await Gasto.create(bodyConHacienda);
+      const payload = {
+        concepto: req.body.concepto.toUpperCase(),
+        monto: parseFloat(req.body.monto),
+        categoria: req.body.categoria,
+        hacienda_id: req.user?.hacienda_id || req.user?.haciendaId
+      };
+      const nuevoGastoId = await Gasto.create(payload);
       res.status(201).json({
         success: true,
         message: 'Gasto registrado en la base de datos',
