@@ -1,6 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { authenticatedFetch } from '../services/api';
-import jwt_decode from 'jwt-decode';
+
+// Simple JWT decode without external library
+function decodeJwt (token) {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return decoded;
+  } catch (e) {
+    console.error('Error decoding JWT', e);
+    return {};
+  }
+}
 
 
 const GastosSistemas = () => {
@@ -17,7 +28,7 @@ const GastosSistemas = () => {
       const session = localStorage.getItem('danubio_session');
       if (!session) return null;
       const { token } = JSON.parse(session);
-      const decoded = jwt_decode(token);
+      const decoded = decodeJwt(token);
       return decoded.hacienda_id || decoded.haciendaId || decoded.hacienda;
     } catch (e) {
       console.error('Error leyendo hacienda_id del token', e);
