@@ -54,6 +54,7 @@ const Sidebar = ({ sidebarOpen }) => {
       color: 'hover:text-violet-400' 
     },
     { path: '/app/farmacia', name: 'Farmacia', icon: Pill, color: 'hover:text-amber-400' },
+    { path: '/app/medicamentos', name: 'Inventario Medicamentos', icon: Pill, color: 'hover:text-amber-400' },
     { path: '/app/reportes', name: 'Reportes y Análisis', icon: BarChart3, color: 'hover:text-rose-400' },
     { path: '/app/gastos', name: 'Gastos', icon: Wallet, color: 'hover:text-slate-100' },
   ];
