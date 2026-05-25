@@ -1,18 +1,25 @@
-const pool = require('../../config/db'); // Ajusta la ruta a tu archivo de conexión
+const pool = require('../../config/db'); // Adjusted path if needed
 
 class Gasto {
     // MÉTODO PARA TRAER TODO DE MYSQL
-    static async findAll() {
-        const [rows] = await pool.query('SELECT * FROM gastos ORDER BY fecha DESC');
-        return rows;
+    static async findAll(filter = {}) {
+    let sql = 'SELECT * FROM gastos';
+    const params = [];
+    if (filter.hacienda_id) {
+      sql += ' WHERE hacienda_id = ?';
+      params.push(filter.hacienda_id);
     }
+    sql += ' ORDER BY fecha DESC';
+    const [rows] = await pool.query(sql, params);
+    return rows;
+  }
 
     // MÉTODO PARA INSERTAR UN GASTO (MANUAL O DESDE FARMACIA)
     static async create(datos) {
         const { fecha, concepto, monto, categoria } = datos;
-        const sql = `INSERT INTO gastos (fecha, concepto, monto, categoria) 
-                     VALUES (?, ?, ?, ?)`;
-        const [result] = await pool.query(sql, [fecha, concepto, monto, categoria]);
+        const sql = `INSERT INTO gastos (fecha, concepto, monto, categoria, hacienda_id) 
+                     VALUES (?, ?, ?, ?, ?)`;
+        const [result] = await pool.query(sql, [fecha, concepto, monto, categoria, datos.hacienda_id]);
         return result.insertId;
     }
 

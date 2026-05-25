@@ -1,21 +1,48 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Wallet, ArrowDownCircle, Trash2, BadgeDollarSign, Calendar, Plus, Filter, Edit3, X, Save } from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
+import jwt_decode from 'jwt-decode';
+import jwt_decode from 'jwt-decode';
 
 const GastosSistemas = () => {
-  const [gastos, setGastos] = useState(() => {
-    const saved = localStorage.getItem('gastos_Hacienda_el_lago');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [gastos, setGastos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [nuevoGasto, setNuevoGasto] = useState({ concepto: '', monto: '', categoria: 'GENERAL' });
   const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
   
   // --- NUEVO: ESTADO PARA SABER QUÉ GASTO EDITAMOS ---
-  const [editandoId, setEditandoId] = useState(null);
+  // Obtener hacienda_id del JWT almacenado en la sesión
+  const getHaciendaId = () => {
+    try {
+      const session = localStorage.getItem('danubio_session');
+      if (!session) return null;
+      const { token } = JSON.parse(session);
+      const decoded = jwt_decode(token);
+      return decoded.hacienda_id || decoded.haciendaId || decoded.hacienda;
+    } catch (e) {
+      console.error('Error leyendo hacienda_id del token', e);
+      return null;
+    }
+  };
+  const haciendaId = getHaciendaId();
 
+  // Cargar gastos desde la API al montar el componente
   useEffect(() => {
-    localStorage.setItem('gastos_Hacienda_el_lago', JSON.stringify(gastos));
-  }, [gastos]);
+    const cargarGastos = async () => {
+      try {
+        const res = await authenticatedFetch('/gastos');
+        if (!res.ok) throw new Error('Error al obtener gastos');
+        const data = await res.json();
+        setGastos(data.data || []);
+      } catch (err) {
+        console.error(err);
+        alert('No se pudieron cargar los gastos');
+      } finally {
+        setLoading(false);
+      }
+    };
+    cargarGastos();
+  }, []);
 
   const gastosFiltrados = useMemo(() => {
     if (filtroCategoria === 'TODOS') return gastos;
@@ -27,30 +54,49 @@ const GastosSistemas = () => {
   }, [gastosFiltrados]);
 
   // --- FUNCIÓN PARA GUARDAR (CREAR O ACTUALIZAR) ---
-  const guardarGasto = (e) => {
+  const guardarGasto = async (e) => {
     e.preventDefault();
     if (!nuevoGasto.concepto || !nuevoGasto.monto) return;
 
-    if (editandoId) {
-      // MODO EDICIÓN
-      const gastosActualizados = gastos.map(g => 
-        g.id === editandoId 
-        ? { ...g, concepto: nuevoGasto.concepto.toUpperCase(), monto: parseFloat(nuevoGasto.monto), categoria: nuevoGasto.categoria }
-        : g
-      );
-      setGastos(gastosActualizados);
-      setEditandoId(null);
-      alert("Gasto actualizado correctamente");
-    } else {
-      // MODO NUEVO
-      const registro = {
-        id: Date.now(),
-        fecha: new Date().toISOString().split('T')[0],
-        concepto: nuevoGasto.concepto.toUpperCase(),
-        monto: parseFloat(nuevoGasto.monto),
-        categoria: nuevoGasto.categoria
-      };
-      setGastos([registro, ...gastos]);
+    try {
+      if (editandoId) {
+        // MODO EDICIÓN - actualizar en el backend
+        const payload = {
+          concepto: nuevoGasto.concepto.toUpperCase(),
+          monto: parseFloat(nuevoGasto.monto),
+          categoria: nuevoGasto.categoria,
+        };
+        const res = await authenticatedFetch(`/gastos/${editandoId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Error al actualizar gasto');
+        // Refrescar lista
+        const refreshed = await authenticatedFetch('/gastos');
+        const data = await refreshed.json();
+        setGastos(data.data || []);
+        setEditandoId(null);
+        alert('Gasto actualizado correctamente');
+      } else {
+        // MODO NUEVO - crear en el backend
+        const payload = {
+          concepto: nuevoGasto.concepto.toUpperCase(),
+          monto: parseFloat(nuevoGasto.monto),
+          categoria: nuevoGasto.categoria,
+        };
+        const res = await authenticatedFetch('/gastos', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error('Error al crear gasto');
+        // Refrescar lista
+        const refreshed = await authenticatedFetch('/gastos');
+        const data = await refreshed.json();
+        setGastos(data.data || []);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Ocurrió un error al guardar el gasto');
     }
 
     setNuevoGasto({ concepto: '', monto: '', categoria: 'GENERAL' });
@@ -73,18 +119,34 @@ const GastosSistemas = () => {
     setNuevoGasto({ concepto: '', monto: '', categoria: 'GENERAL' });
   };
 
-  const eliminarGasto = (id) => {
-    if (window.confirm("¿Eliminar este registro?")) {
-      setGastos(gastos.filter(g => g.id !== id));
+  const eliminarGasto = async (id) => {
+    if (window.confirm('¿Eliminar este registro?')) {
+      try {
+        const res = await authenticatedFetch(`/gastos/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Error al eliminar gasto');
+        const refreshed = await authenticatedFetch('/gastos');
+        const data = await refreshed.json();
+        setGastos(data.data || []);
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo eliminar el gasto');
+      }
     }
   };
 
   const categorias = ['TODOS', 'GENERAL', 'NOMINA', 'ALIMENTO', 'MANTENIMIENTO', 'FARMACIA'];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="text-gray-600">Cargando gastos...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      
-      {/* HEADER DINANCIERO */}
+      {/* HEADER DINÁMICO */}
       <div className="bg-slate-900 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
         <div className="relative z-10">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2 italic">
