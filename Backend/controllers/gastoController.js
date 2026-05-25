@@ -10,8 +10,8 @@ const gastoController = {
   getGastos: async (req, res, next) => {
     try {
       const haciendaId = req.user?.haciendaId || req.user?.hacienda_id;
-      // Utilizamos la cláusula WHERE para que MySQL devuelva solo los gastos de esa hacienda
-      const gastos = await Gasto.findAll({ where: { hacienda_id: haciendaId } });
+      // Llamamos al modelo pasando directamente el filtro esperado (hacienda_id)
+      const gastos = await Gasto.findAll({ hacienda_id: haciendaId });
       res.status(200).json({ success: true, data: gastos });
     } catch (error) {
       next(error);

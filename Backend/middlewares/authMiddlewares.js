@@ -37,6 +37,9 @@ export const verificarToken = async (req, res, next) => {
             hacienda_id: decoded.hacienda_id || decoded.haciendaId,
             haciendaId: decoded.haciendaId
         };
+
+        console.log('🔍 Decoded JWT:', decoded);
+        console.log('🧭 req.user set to:', req.user);
         
         next();
     } catch (err) {

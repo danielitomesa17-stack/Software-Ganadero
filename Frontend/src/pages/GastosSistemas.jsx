@@ -42,20 +42,29 @@ const GastosSistemas = () => {
   // Cargar gastos desde la API al montar el componente
   useEffect(() => {
     const cargarGastos = async () => {
+      if (!haciendaId) {
+        console.error('No se encontró hacienda_id, abortando carga de gastos');
+        setLoading(false);
+        return;
+      }
       try {
         const res = await authenticatedFetch('/gastos');
         if (!res.ok) throw new Error('Error al obtener gastos');
         const data = await res.json();
         setGastos(data.data || []);
       } catch (err) {
-        console.error(err);
+        console.error('Error al cargar gastos', err);
+        if (err.response) {
+          console.error('Status:', err.response.status);
+          err.response.text().then(t => console.error('Body:', t));
+        }
         alert('No se pudieron cargar los gastos');
       } finally {
         setLoading(false);
       }
     };
     cargarGastos();
-  }, []);
+  }, [haciendaId]);
 
   const gastosFiltrados = useMemo(() => {
     if (filtroCategoria === 'TODOS') return gastos;
