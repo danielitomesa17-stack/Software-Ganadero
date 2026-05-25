@@ -1,0 +1,21 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo Redondeado Estilo App -->
+  <rect width="100" height="100" rx="25" fill="#0F172A"/>
+  
+  <!-- Silueta de Vaca Estilizada -->
+  <path d="M30 45C30 35 38 30 45 30H55C62 30 70 35 70 45V55C70 60 65 65 60 65H40C35 65 30 60 30 55V45Z" fill="white"/>
+  
+  <!-- Elementos de Software / Conexiones -->
+  <circle cx="40" cy="45" r="4" fill="#22C55E"/> <!-- Ojo Tecnológico -->
+  <circle cx="60" cy="45" r="4" fill="#22C55E"/>
+  
+  <!-- Nodos de Red / Datos -->
+  <path d="M50 65V75" stroke="#22C55E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="80" r="3" fill="#22C55E"/>
+  
+  <path d="M70 50H80" stroke="#22C55E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="85" cy="50" r="3" fill="#22C55E"/>
+  
+  <path d="M30 50H20" stroke="#22C55E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="15" cy="50" r="3" fill="#22C55E"/>
+</svg>
