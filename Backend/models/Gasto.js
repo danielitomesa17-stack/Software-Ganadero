@@ -23,7 +23,7 @@ class Gasto {
         const [result] = await pool.query(sql, [fecha, concepto, monto, categoria, datos.hacienda_id]);
         return result.insertId;
       }
-    }
+    
 
     // MÉTODO PARA ACTUALIZAR (EDITAR)
     static async update(id, datos) {

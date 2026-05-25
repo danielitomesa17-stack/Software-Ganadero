@@ -21,6 +21,15 @@ const gastoController = {
   // 2. Crear un nuevo gasto (manual o desde farmacia) adjuntando hacienda_id
   createGasto: async (req, res, next) => {
     try {
+      // Guardar que el cuerpo de la petición exista
+      if (!req.body) {
+        console.warn('⚠️ createGasto llamado sin body');
+        return res.status(400).json({
+          success: false,
+          message: 'Datos del gasto faltantes',
+          error: 'req.body es undefined'
+        });
+      }
       console.log('🔧 crear gasto - req.body:', req.body);
       const payload = {
         concepto: req.body.concepto.toUpperCase(),
@@ -47,6 +56,16 @@ const gastoController = {
     try {
       const { id } = req.params;
       // Normalizar datos provenientes del formulario
+      // Guardar que el cuerpo de la petición exista
+      if (!req.body) {
+        console.warn('⚠️ updateGasto llamado sin body');
+        return res.status(400).json({
+          success: false,
+          message: 'Datos de actualización faltantes',
+          error: 'req.body es undefined'
+        });
+      }
+      console.log('🔧 actualizar gasto - req.body:', req.body);
       const payload = {
         concepto: req.body.concepto ? req.body.concepto.toUpperCase() : undefined,
         monto: req.body.monto ? parseFloat(req.body.monto) : undefined,
