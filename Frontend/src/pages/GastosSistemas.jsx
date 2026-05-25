@@ -251,10 +251,9 @@ const GastosSistemas = () => {
             </form>
           </div>
         </div>
-
         {/* TABLA CON BOTÓN EDITAR */}
         <div className="lg:col-span-8">
-          <div className="bg-white rounded-[3.5rem] shadow-xl border border-slate-100 overflow-hidden">
+          <div className="bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] shadow-xl border border-slate-800 overflow-hidden">
             <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-2">
               <input
                 type="text"
@@ -273,57 +272,26 @@ const GastosSistemas = () => {
                 ))}
               </select>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-slate-50/50">
-                  <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                    <th className="px-8 py-6">Detalle del Gasto</th>
-                    <th className="px-8 py-6 text-right">Valor</th>
-                    <th className="px-8 py-6 text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 font-bold italic">
-                  {gastosFiltrados.map(g => (
-                    <tr key={g.id} className={`hover:bg-slate-50/50 transition-colors ${editandoId === g.id ? 'bg-blue-50/50' : ''}`}>
-                      <td className="px-8 py-6">
-                        <p className={`text-xs uppercase font-black ${editandoId === g.id ? 'text-blue-600' : 'text-slate-900'}`}>{g.concepto}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[9px] text-slate-400 uppercase">{g.fecha}</span>
-                          <span className="h-1 w-1 bg-slate-300 rounded-full"></span>
-                          <span className="text-[9px] text-blue-500 uppercase font-black">{g.categoria}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 text-right text-slate-900 font-black">
-                        $ {parseFloat(g.monto).toLocaleString('es-CO')}
-                      </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center justify-center gap-3">
-                          <button 
-                            onClick={() => prepararEdicion(g)} 
-                            className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
-                            title="Editar"
-                          >
-                            <Edit3 size={16} />
-                          </button>
-                          <button 
-                            onClick={() => eliminarGasto(g.id)} 
-                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                            title="Eliminar"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid gap-4 md:grid-cols-2 p-4">
+              {gastosFiltrados.map(g => (
+                <div key={g.id} className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 shadow-lg border border-slate-700 hover:bg-white/20 transition-colors">
+                  <h3 className="text-sm font-bold text-white mb-2">{g.concepto}</h3>
+                  <p className="text-xs text-slate-300">{g.fecha} • <span className="text-blue-400">{g.categoria}</span></p>
+                  <p className="mt-2 text-lg font-black text-white">$ {parseFloat(g.monto).toLocaleString('es-CO')}</p>
+                  <div className="flex items-center justify-end gap-2 mt-3">
+                    <button onClick={() => prepararEdicion(g)} className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="Editar"><Edit3 size={16} /></button>
+                    <button onClick={() => eliminarGasto(g.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Eliminar"><Trash2 size={16} /></button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+
+
+  </div>
+);
 };
 
 export default GastosSistemas;
