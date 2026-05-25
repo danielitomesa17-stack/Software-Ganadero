@@ -1,4 +1,4 @@
-import Gasto from '../../models/Gasto.js';
+import Gasto from '../models/Gasto.js';
 
 /**
  * Controlador para manejar operaciones CRUD de gastos.
