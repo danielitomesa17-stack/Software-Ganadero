@@ -188,20 +188,40 @@ const GastosSistemas = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20 max-w-7xl mx-auto px-4 lg:px-8">
-      {/* HEADER DINÁMICO */}
-      <div className="bg-slate-900/80 backdrop-blur-lg rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
-        <div className="relative z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2 italic">
-            {editandoId ? 'Editando Registro...' : `Egresos ${filtroCategoria}`}
-          </p>
-          <h2 className={`text-6xl font-black tracking-tighter italic transition-colors ${editandoId ? 'text-blue-400' : 'text-green-400'}`}>
-            $ {totalDinero.toLocaleString('es-CO')}
-          </h2>
+      <div className="space-y-8 animate-in fade-in duration-700 pb-20 max-w-7xl mx-auto px-4 lg:px-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+          <div className="p-4 flex items-center gap-2 bg-slate-900/70 backdrop-blur-lg rounded-[3.5rem] border border-slate-800">
+            <input
+              type="text"
+              placeholder="Buscar por concepto..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="flex-1 p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30"
+            />
+            <select
+              className="p-3 rounded-2xl bg-white/70 border border-gray-200 focus:border-blue-400/30 w-full sm:w-auto"
+              value={filtroCategoria}
+              onChange={e => setFiltroCategoria(e.target.value)}
+            >
+              {categorias.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
         </div>
+        {/* HEADER DINÁMICO */}
+        <div className="bg-slate-900/80 backdrop-blur-lg rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden border border-white/10">
+          <div className="relative z-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 mb-2 italic">
+              {editandoId ? 'Editando Registro...' : `Egresos ${filtroCategoria}`}
+            </p>
+            <h2 className={`text-6xl font-black tracking-tighter italic transition-colors ${editandoId ? 'text-blue-400' : 'text-green-400'}`}>
+              $ {totalDinero.toLocaleString('es-CO')}
+            </h2>
+          </div>
           <BadgeDollarSign size={140} className="absolute right-[-20px] bottom-[-20px] text-white/5 rotate-12" />
           {/* Removed duplicate chart */}
-      </div>
+        </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
   {/* CHART */}
   <div className="lg:col-span-8 mb-8">
