@@ -78,3 +78,33 @@ export const eliminarMedicamento = async (id) => {
   });
   return res.json();
 };
+
+// API wrappers for Producción
+
+export const getProduccion = async () => {
+  const res = await authenticatedFetch('/produccion');
+  return res.json();
+};
+
+export const crearProduccion = async (data) => {
+  const res = await authenticatedFetch('/produccion', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const actualizarProduccion = async (id, data) => {
+  const res = await authenticatedFetch(`/produccion/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const eliminarProduccion = async (id) => {
+  const res = await authenticatedFetch(`/produccion/${id}`, {
+    method: 'DELETE',
+  });
+  return res.json();
+};

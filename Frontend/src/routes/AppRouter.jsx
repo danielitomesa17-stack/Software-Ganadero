@@ -64,7 +64,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Gastos</span>}
           </Link>
 
-          {/* ... otros links (Producción, Sanidad, Farmacia) */}
+          <Link to="/app/ProduccionSistemas" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/ProduccionSistemas') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+  <Scale size={22} />
+  {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Producción</span>}
+</Link>
+{/* ... otros links (Producción, Sanidad, Farmacia) */}
         </nav>
 
         <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full">
@@ -84,7 +88,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             <Routes>
               <Route path="inventario" element={<InventarioLista />} />
               <Route path="reportes" element={<ReportesSistemas />} />
-              <Route path="produccion" element={<ProduccionSistemas />} />
+              <Route path="ProduccionSistemas" element={<ProduccionSistemas />} />
               <Route path="sanidad" element={<SanidadSistemas />} />
               <Route path="MedicamentosInventario" element={<MedicamentosInventario />} />
               <Route path="gastos" element={<GastosSistemas />} />

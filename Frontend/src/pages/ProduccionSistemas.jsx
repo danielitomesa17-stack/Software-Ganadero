@@ -6,7 +6,7 @@ import {
   Milk, Droplets, Zap, Trash2, Edit3, X
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { authenticatedFetch } from '../services/api';
+import { getProduccion, crearProduccion, actualizarProduccion, eliminarProduccion, authenticatedFetch } from '../services/api';
 
 const PESO_OBJETIVO = 450; 
 const PRECIO_KILO_ESTIMADO = 8500;
@@ -33,8 +33,7 @@ const ProduccionSistemas = () => {
       const dataAn = await resAn.json();
       setAnimales(Array.isArray(dataAn) ? dataAn : []);
 
-      const resProd = await authenticatedFetch('/produccion');
-      const dataProd = await resProd.json();
+      const dataProd = await getProduccion();
       setRegistrosHistorial(Array.isArray(dataProd) ? dataProd : []);
     } catch (error) {
       console.error("Error:", error);
@@ -71,7 +70,6 @@ const ProduccionSistemas = () => {
     }
 
     const payload = {
-      id: editandoId,
       animal_id: registro.animalId,
       chapeta: infoAnimalActual.caravana_id,
       valor: Number(registro.valorActual),
@@ -80,16 +78,22 @@ const ProduccionSistemas = () => {
     };
 
     try {
-      const response = await authenticatedFetch('/produccion', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-
-      if (response.ok) {
+      let response;
+      if (editandoId) {
+        // actualizar registro existente
+        response = await actualizarProduccion(editandoId, payload);
+      } else {
+        // crear nuevo registro
+        response = await crearProduccion(payload);
+      }
+      
+      if (response) {
         setEditandoId(null);
         setRegistro({ animalId: '', valorActual: '', fecha: new Date().toISOString().split('T')[0] });
         setBusqueda("");
         cargarDatos();
+      } else {
+        console.error('Error al guardar registro:', response);
       }
     } catch (error) {
       console.error(error);
@@ -99,7 +103,7 @@ const ProduccionSistemas = () => {
   const eliminarRegistro = async (id) => {
     if (!window.confirm("¿Eliminar registro?")) return;
     try {
-      await authenticatedFetch(`/produccion/${id}`, { method: 'DELETE' });
+      await eliminarProduccion(id);
       cargarDatos();
     } catch (error) {
       console.error(error);
