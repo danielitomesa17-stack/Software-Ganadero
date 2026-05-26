@@ -17,17 +17,21 @@ const SanidadSistemas = () => {
   });
 
   useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await authenticatedFetch('/api/sanidad');
-          const json = await response.json();
-          setRegistros(json.data || []);
-          setLoading(false);
-        } catch (err) {
-          setError(err.message);
-          setLoading(false);
+    const fetchData = async () => {
+      try {
+        const response = await authenticatedFetch('/sanidad');
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Error ${response.status}: ${text}`);
         }
-      };
+        const json = await response.json();
+        setRegistros(json.data || []);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
     fetchData();
   }, []);
 
@@ -47,11 +51,15 @@ const SanidadSistemas = () => {
         proximaDosis: null,
         observacion: ''
       };
-      const response = await authenticatedFetch('/api/sanidad', {
+      const response = await authenticatedFetch('/sanidad', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(nuevoRegistro)
       });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Error ${response.status}: ${text}`);
+      }
       const created = await response.json();
       setRegistros([created, ...registros]);
       setNuevoReg({ animalId: '', chapeta: '', nombre: '', stock: '', unidad: 'ml', precio: '' });
@@ -64,7 +72,11 @@ const SanidadSistemas = () => {
   const eliminarMed = async (id) => {
     if (window.confirm("¿Eliminar este registro?")) {
       try {
-        await authenticatedFetch(`/api/sanidad/${id}`, { method: 'DELETE' });
+        const response = await authenticatedFetch(`/sanidad/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Error ${response.status}: ${text}`);
+        }
         setRegistros(registros.filter(r => r.id !== id));
       } catch (err) {
         alert('Error al eliminar: ' + err.message);
