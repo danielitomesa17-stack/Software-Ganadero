@@ -1,67 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import { Pill, Plus, Trash2, Package, DollarSign, Activity } from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
 
 const MedicamentosInventario = () => {
-  const [medicamentos, setMedicamentos] = useState(() => {
-    const saved = localStorage.getItem('inventario_medicamentos_danubio');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [registros, setRegistros] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [nuevoMed, setNuevoMed] = useState({ 
+  const [nuevoReg, setNuevoReg] = useState({ 
+    animalId: '',
+    chapeta: '',
     nombre: '', 
     stock: '', 
     unidad: 'ml',
-    precio: '' // <--- CAMPO PARA ENLAZAR CON GASTOS
+    precio: ''
   });
 
-  // Guardar en LocalStorage cada vez que cambie la lista
   useEffect(() => {
-    localStorage.setItem('inventario_medicamentos_danubio', JSON.stringify(medicamentos));
-  }, [medicamentos]);
+    const fetchData = async () => {
+      try {
+        const data = await authenticatedFetch('/api/sanidad');
+        setRegistros(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const guardarInsumo = (e) => {
+  const guardarInsumo = async (e) => {
     e.preventDefault();
-    if (!nuevoMed.nombre || !nuevoMed.stock || !nuevoMed.precio) {
+    if (!nuevoReg.nombre || !nuevoReg.stock || !nuevoReg.precio) {
       alert("Por favor rellene nombre, cantidad y precio de compra");
       return;
     }
-
-    const idUnico = Date.now();
-
-    // 1. REGISTRO EN INVENTARIO
-    const nuevoItem = {
-      id: idUnico,
-      nombre: nuevoMed.nombre.toUpperCase(),
-      stock: parseFloat(nuevoMed.stock),
-      unidad: nuevoMed.unidad
-    };
-    setMedicamentos([nuevoItem, ...medicamentos]);
-
-    // 2. ENLACE AUTOMÁTICO A GASTOS
-    const nuevoGasto = {
-      id: idUnico + 1,
-      fecha: new Date().toISOString().split('T')[0],
-      concepto: `COMPRA INSUMO: ${nuevoMed.nombre.toUpperCase()}`,
-      monto: parseFloat(nuevoMed.precio),
-      categoria: 'FARMACIA'
-    };
-
-    const gastosActuales = JSON.parse(localStorage.getItem('gastos_danubio') || '[]');
-    localStorage.setItem('gastos_danubio', JSON.stringify([nuevoGasto, ...gastosActuales]));
-
-    // 3. LIMPIAR FORMULARIO
-    setNuevoMed({ nombre: '', stock: '', unidad: 'ml', precio: '' });
-    alert("Stock actualizado y gasto registrado en Finanzas");
-    
-    // Notificar a otros componentes (como el Sidebar o Gastos)
-    window.dispatchEvent(new Event('storage'));
-  };
-
-  const eliminarMed = (id) => {
-    if (window.confirm("¿Eliminar este medicamento? (Esto no borrará el gasto ya registrado)")) {
-      setMedicamentos(medicamentos.filter(m => m.id !== id));
+    try {
+      const nuevoRegistro = {
+        animal_id: parseInt(nuevoReg.animalId) || null,
+        chapeta: nuevoReg.chapeta,
+        medicamento: nuevoReg.nombre.toUpperCase(),
+        dosis: nuevoReg.stock,
+        fecha: new Date().toISOString().split('T')[0],
+        proximaDosis: null,
+        observacion: ''
+      };
+      const response = await authenticatedFetch('/api/sanidad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuevoRegistro)
+      });
+      const created = await response.json();
+      setRegistros([created, ...registros]);
+      setNuevoReg({ animalId: '', chapeta: '', nombre: '', stock: '', unidad: 'ml', precio: '' });
+      alert("Registro guardado exitosamente");
+    } catch (err) {
+      alert('Error al guardar registro: ' + err.message);
     }
   };
+
+  const eliminarMed = async (id) => {
+    if (window.confirm("¿Eliminar este registro?")) {
+      try {
+        await authenticatedFetch(`/api/sanidad/${id}`, { method: 'DELETE' });
+        setRegistros(registros.filter(r => r.id !== id));
+      } catch (err) {
+        alert('Error al eliminar: ' + err.message);
+      }
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center">Cargando...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Error: {error}</div>;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -86,16 +97,36 @@ const MedicamentosInventario = () => {
             </h3>
             
             <form onSubmit={guardarInsumo} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Nombre del Producto</label>
-                <input 
-                  type="text" 
-                  placeholder="Ej: IVERMECTINA..." 
-                  className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-amber-500/20 uppercase"
-                  value={nuevoMed.nombre}
-                  onChange={(e) => setNuevoMed({...nuevoMed, nombre: e.target.value})}
-                />
-              </div>
+               <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase ml-2">ID del Animal</label>
+                 <input 
+                   type="number" 
+                   placeholder="ID del animal (numérico)" 
+                   className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none"
+                   value={nuevoReg.animalId}
+                   onChange={(e) => setNuevoReg({...nuevoReg, animalId: e.target.value})}
+                 />
+               </div>
+               <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Chapeta</label>
+                 <input 
+                   type="text" 
+                   placeholder="Ej: CH-001" 
+                   className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none"
+                   value={nuevoReg.chapeta}
+                   onChange={(e) => setNuevoReg({...nuevoReg, chapeta: e.target.value})}
+                 />
+               </div>
+               <div className="space-y-1">
+                 <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Nombre del Medicamento</label>
+                 <input 
+                   type="text" 
+                   placeholder="Ej: IVERMECTINA..." 
+                   className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none border-2 border-transparent focus:border-amber-500/20 uppercase"
+                   value={nuevoReg.nombre}
+                   onChange={(e) => setNuevoReg({...nuevoReg, nombre: e.target.value})}
+                 />
+               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -104,16 +135,16 @@ const MedicamentosInventario = () => {
                     type="number" 
                     placeholder="0.00" 
                     className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none"
-                    value={nuevoMed.stock}
-                    onChange={(e) => setNuevoMed({...nuevoMed, stock: e.target.value})}
+                    value={nuevoReg.stock}
+                    onChange={(e) => setNuevoReg({...nuevoReg, stock: e.target.value})}
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Unidad</label>
                   <select 
                     className="w-full p-4 bg-slate-50 rounded-2xl font-bold outline-none appearance-none"
-                    value={nuevoMed.unidad}
-                    onChange={(e) => setNuevoMed({...nuevoMed, unidad: e.target.value})}
+                    value={nuevoReg.unidad}
+                    onChange={(e) => setNuevoReg({...nuevoReg, unidad: e.target.value})}
                   >
                     <option value="ml">Mililitros (ml)</option>
                     <option value="frascos">Frascos</option>
@@ -131,8 +162,8 @@ const MedicamentosInventario = () => {
                   type="number" 
                   placeholder="$ 0.00" 
                   className="w-full p-4 bg-amber-50 rounded-2xl font-black text-amber-700 outline-none border-2 border-amber-100 focus:border-amber-500/40"
-                  value={nuevoMed.precio}
-                  onChange={(e) => setNuevoMed({...nuevoMed, precio: e.target.value})}
+                  value={nuevoReg.precio}
+                  onChange={(e) => setNuevoReg({ ...nuevoReg, precio: e.target.value })}
                 />
               </div>
 
@@ -150,40 +181,44 @@ const MedicamentosInventario = () => {
               <thead>
                 <tr className="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
                   <th className="px-10 py-6">Insumo</th>
-                  <th className="px-10 py-6 text-center">Stock Disponible</th>
-                  <th className="px-10 py-6 text-center">Estado</th>
+                  <th className="px-10 py-6 text-center">Cantidad</th>
+                  <th className="px-10 py-6 text-center">Fecha</th>
+                  <th className="px-10 py-6 text-center">Prox. Dosis</th>
+                  <th className="px-10 py-6 text-center">Obs</th>
                   <th className="px-10 py-6 text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 font-bold">
-                {medicamentos.map(m => (
-                  <tr key={m.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="px-10 py-6">
-                      <p className="font-black text-slate-800 text-sm uppercase tracking-tighter">{m.nombre}</p>
-                    </td>
-                    <td className="px-10 py-6 text-center">
-                      <span className="text-xl font-black text-slate-900">{m.stock}</span>
-                      <span className="ml-1 text-[10px] text-slate-400 uppercase">{m.unidad}</span>
-                    </td>
-                    <td className="px-10 py-6 text-center">
-                      {m.stock <= 5 ? (
-                        <span className="bg-red-50 text-red-500 px-3 py-1 rounded-full text-[8px] font-black uppercase">Crítico</span>
-                      ) : (
-                        <span className="bg-green-50 text-green-500 px-3 py-1 rounded-full text-[8px] font-black uppercase">OK</span>
-                      )}
-                    </td>
-                    <td className="px-10 py-6 text-center">
-                      <button onClick={() => eliminarMed(m.id)} className="text-slate-200 hover:text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {medicamentos.length === 0 && (
-                  <tr>
-                    <td colSpan="4" className="py-20 text-center text-slate-300 italic text-sm">No hay medicamentos en inventario.</td>
-                  </tr>
-                )}
+                 {registros.map(r => (
+                   <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
+                     <td className="px-10 py-6">
+                       <p className="font-black text-slate-800 text-sm uppercase tracking-tighter">{r.chapeta} - {r.medicamento}</p>
+                     </td>
+                     <td className="px-10 py-6 text-center">
+                       <span className="text-xl font-black text-slate-900">{r.dosis}</span>
+                       <span className="ml-1 text-[10px] text-slate-400 uppercase">{r.unidad || ''}</span>
+                     </td>
+                     <td className="px-10 py-6 text-center">
+                       {r.fecha}
+                     </td>
+                     <td className="px-10 py-6 text-center">
+                       {r.proximaDosis || '-'}
+                     </td>
+                     <td className="px-10 py-6 text-center">
+                       {r.observacion || '-'}
+                     </td>
+                     <td className="px-10 py-6 text-center">
+                       <button onClick={() => eliminarMed(r.id)} className="text-slate-200 hover:text-red-500 transition-colors">
+                         <Trash2 size={18} />
+                       </button>
+                     </td>
+                   </tr>
+                 ))}
+                 {registros.length === 0 && (
+                   <tr>
+                     <td colSpan="6" className="py-20 text-center text-slate-300 italic text-sm">No hay registros de sanidad.</td>
+                   </tr>
+                 )}
               </tbody>
             </table>
           </div>

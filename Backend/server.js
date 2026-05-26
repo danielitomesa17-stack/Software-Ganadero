@@ -6,6 +6,7 @@ import medicamentoRoutes from './routes/medicamentoRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import gastoRoutes from './routes/gastoRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import sanidadRoutes from './routes/sanidadRoutes.js';
 
 import { verificarToken } from './middlewares/authMiddlewares.js';
 
@@ -25,6 +26,7 @@ app.use(express.json());
 // Rutas protegidas (middleware verificarToken aplicado antes de entrar a las rutas)
 app.use('/api/gastos', verificarToken, gastoRoutes);
 app.use('/api/medicamentos', verificarToken, medicamentoRoutes);
+app.use('/api/sanidad', verificarToken, sanidadRoutes);
 
 // Rutas Públicas (Login/Registro)
 app.use('/api/auth', authRoutes); 
