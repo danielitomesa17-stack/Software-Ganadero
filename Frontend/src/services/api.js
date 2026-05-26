@@ -64,9 +64,10 @@ export const crearMedicamento = async (data) => {
   return res.json();
 };
 
-export const eliminarMedicamento = async (id) => {
+export const actualizarMedicamento = async (id, data) => {
   const res = await authenticatedFetch(`/medicamentos/${id}`, {
-    method: 'DELETE',
+    method: 'PUT',
+    body: JSON.stringify(data),
   });
   return res.json();
 };

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { getMedicamentos, crearMedicamento, eliminarMedicamento } from '../services/api';
-import { Pill, Plus, Trash2, AlertCircle, Package, Search, DollarSign } from 'lucide-react';
+import { getMedicamentos, crearMedicamento, eliminarMedicamento, actualizarMedicamento } from '../services/api';
+import { Pill, Plus, Trash2, AlertCircle, Package, Search, DollarSign, Edit3 } from 'lucide-react';
 
 const MedicamentosInventario = () => {
   const [medicamentos, setMedicamentos] = useState([]);
 
   // 1. Agregamos 'precio' al estado inicial
   const [nuevoMed, setNuevoMed] = useState({ nombre: '', stock: '', unidad: 'ml', precio: '' });
+  const [editandoId, setEditandoId] = useState(null);
   const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
@@ -38,19 +39,32 @@ const MedicamentosInventario = () => {
         precio_compra: parseFloat(nuevoMed.precio),
         hacienda_id: 1 // TODO: obtener ID real de la hacienda
       };
-      await crearMedicamento(payload);
-      // Refrescar lista desde backend
+      if (editandoId) {
+        await actualizarMedicamento(editandoId, payload);
+        setEditandoId(null);
+      } else {
+        await crearMedicamento(payload);
+      }
       const json = await getMedicamentos();
       if (json.success) setMedicamentos(json.data);
       setNuevoMed({ nombre: '', stock: '', unidad: 'ml', precio: '' });
-      alert("Medicamento guardado en el servidor");
+      alert(editandoId ? "Medicamento actualizado" : "Medicamento guardado en el servidor");
     } catch (err) {
-      console.error('Error creando medicamento:', err);
+      console.error('Error guardando medicamento:', err);
       alert('Error al guardar el medicamento');
     }
   };
 
-  const eliminarMed = async (id) => {
+  const iniciarEdicion = (med) => {
+    setEditandoId(med.id);
+    setNuevoMed({
+      nombre: med.nombre,
+      stock: med.stock.toString(),
+      unidad: med.unidad,
+      precio: med.precio_compra ? med.precio_compra.toString() : ''
+    });
+  };
+ 
     if (window.confirm("¿Eliminar este insumo?")) {
       try {
         await eliminarMedicamento(id);
@@ -168,6 +182,9 @@ const MedicamentosInventario = () => {
                         )}
                       </td>
                       <td className="px-8 py-6 text-center">
+                        <button onClick={() => iniciarEdicion(m)} className="text-slate-300 hover:text-blue-500 transition-colors mr-2">
+                          <Edit3 size={18} />
+                        </button>
                         <button onClick={() => eliminarMed(m.id)} className="text-slate-300 hover:text-red-500 transition-colors">
                           <Trash2 size={18} />
                         </button>
