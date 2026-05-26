@@ -17,16 +17,17 @@ const SanidadSistemas = () => {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await authenticatedFetch('/api/sanidad');
-        setRegistros(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+      const fetchData = async () => {
+        try {
+          const response = await authenticatedFetch('/api/sanidad');
+          const json = await response.json();
+          setRegistros(json.data || []);
+          setLoading(false);
+        } catch (err) {
+          setError(err.message);
+          setLoading(false);
+        }
+      };
     fetchData();
   }, []);
 
