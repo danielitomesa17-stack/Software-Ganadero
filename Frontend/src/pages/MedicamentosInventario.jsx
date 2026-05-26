@@ -64,7 +64,8 @@ const MedicamentosInventario = () => {
       precio: med.precio_compra ? med.precio_compra.toString() : ''
     });
   };
- 
+
+  const eliminarMed = async (id) => {
     if (window.confirm("¿Eliminar este insumo?")) {
       try {
         await eliminarMedicamento(id);
