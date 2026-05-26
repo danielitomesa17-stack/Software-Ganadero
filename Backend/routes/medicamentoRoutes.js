@@ -1,6 +1,7 @@
 // Backend/routes/medicamentoRoutes.js
 
-import express from 'express';
+import { verificarToken } from '../middlewares/authMiddlewares.js';
+import { setTenant } from '../middlewares/setTenant.js';
 import {
   getMedicamentos,
   getMedicamento,
@@ -11,10 +12,10 @@ import {
 
 const router = express.Router();
 
-router.get('/', getMedicamentos);
-router.get('/:id', getMedicamento);
-router.post('/', crearMedicamento);
-router.put('/:id', actualizarMedicamento);
-router.delete('/:id', eliminarMedicamento);
+router.get('/', verificarToken, setTenant, getMedicamentos);
+router.get('/:id', verificarToken, setTenant, getMedicamento);
+router.post('/', verificarToken, setTenant, crearMedicamento);
+router.put('/:id', verificarToken, setTenant, actualizarMedicamento);
+router.delete('/:id', verificarToken, setTenant, eliminarMedicamento);
 
 export default router;

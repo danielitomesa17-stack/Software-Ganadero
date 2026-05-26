@@ -109,11 +109,12 @@ const gastoController = {
     }
   },
 
-  // 4. Eliminar un gasto
+  // 4. Eliminar un gasto (tenant-aware)
   deleteGasto: async (req, res, next) => {
     try {
       const { id } = req.params;
-      await Gasto.delete(id);
+      const tenantId = req.user?.hacienda_id || req.user?.haciendaId;
+      await Gasto.delete(id, tenantId);
       res.status(200).json({
         success: true,
         message: 'Gasto eliminado de MySQL',

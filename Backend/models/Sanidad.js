@@ -8,7 +8,10 @@ class Sanidad {
    * @returns {Promise<Array>} Lista de registros.
    */
   static async list() {
-    const [rows] = await pool.query('SELECT * FROM sanidad');
+    const tenantId = arguments[0];
+    const sql = tenantId ? 'SELECT * FROM sanidad WHERE hacienda_id = ?' : 'SELECT * FROM sanidad';
+    const params = tenantId ? [tenantId] : [];
+    const [rows] = await pool.query(sql, params);
     return rows;
   }
 
@@ -25,17 +28,19 @@ class Sanidad {
    * @param {Object} data
    */
   static async create(data) {
-    const { animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion } = data;
-    const sql = `INSERT INTO sanidad (animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.query(sql, [animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion]);
+    const { animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion, hacienda_id } = data;
+    const sql = `INSERT INTO sanidad (animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion, hacienda_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await pool.query(sql, [animal_id, chapeta, medicamento, dosis, fecha, proximaDosis, observacion, hacienda_id]);
     return result.insertId;
   }
 
   /**
    * Elimina un registro.
    */
-  static async delete(id) {
-    await pool.query('DELETE FROM sanidad WHERE id = ?', [id]);
+  static async delete(id, tenantId) {
+    const sql = tenantId ? 'DELETE FROM sanidad WHERE id = ? AND hacienda_id = ?' : 'DELETE FROM sanidad WHERE id = ?';
+    const params = tenantId ? [id, tenantId] : [id];
+    await pool.query(sql, params);
     return true;
   }
 }

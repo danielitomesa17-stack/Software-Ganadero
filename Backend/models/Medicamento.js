@@ -7,8 +7,10 @@ class Medicamento {
    * Obtiene todos los medicamentos.
    * @returns {Promise<Array>} Lista de medicamentos.
    */
-  static async list() {
-    const [rows] = await pool.query('SELECT * FROM medicamentos');
+  static async list(tenantId) {
+    const sql = tenantId ? 'SELECT * FROM medicamentos WHERE hacienda_id = ?' : 'SELECT * FROM medicamentos';
+    const params = tenantId ? [tenantId] : [];
+    const [rows] = await pool.query(sql, params);
     return rows;
   }
 

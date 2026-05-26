@@ -7,7 +7,8 @@ import Medicamento from '../models/Medicamento.js';
  */
 export const getMedicamentos = async (req, res) => {
   try {
-    const list = await Medicamento.list();
+    const tenantId = req.user?.hacienda_id || req.user?.haciendaId;
+    const list = await Medicamento.list(tenantId);
     res.json({ success: true, data: list });
   } catch (err) {
     console.error('Error obteniendo medicamentos:', err);
@@ -35,7 +36,9 @@ export const getMedicamento = async (req, res) => {
  */
 export const crearMedicamento = async (req, res) => {
   try {
-    const insertId = await Medicamento.create(req.body);
+    const tenantId = req.user?.hacienda_id || req.user?.haciendaId;
+    const payload = { ...req.body, hacienda_id: tenantId };
+    const insertId = await Medicamento.create(payload);
     res.status(201).json({ success: true, id: insertId });
   } catch (err) {
     console.error('Error creando medicamento:', err);
@@ -49,7 +52,9 @@ export const crearMedicamento = async (req, res) => {
 export const actualizarMedicamento = async (req, res) => {
   const { id } = req.params;
   try {
-    await Medicamento.update(id, req.body);
+    const tenantId = req.user?.hacienda_id || req.user?.haciendaId;
+    const payload = { ...req.body, hacienda_id: tenantId };
+    await Medicamento.update(id, payload);
     res.json({ success: true });
   } catch (err) {
     console.error('Error actualizando medicamento:', err);
@@ -63,7 +68,8 @@ export const actualizarMedicamento = async (req, res) => {
 export const eliminarMedicamento = async (req, res) => {
   const { id } = req.params;
   try {
-    await Medicamento.delete(id);
+    const tenantId = req.user?.hacienda_id || req.user?.haciendaId;
+    await Medicamento.delete(id, tenantId);
     res.json({ success: true });
   } catch (err) {
     console.error('Error eliminando medicamento:', err);

@@ -86,8 +86,10 @@ class Gasto {
       }
 
     // MÉTODO PARA ELIMINAR
-    static async delete(id) {
-        await pool.query('DELETE FROM gastos WHERE id = ?', [id]);
+    static async delete(id, tenantId) {
+        const sql = tenantId ? 'DELETE FROM gastos WHERE id = ? AND hacienda_id = ?' : 'DELETE FROM gastos WHERE id = ?';
+        const params = tenantId ? [id, tenantId] : [id];
+        await pool.query(sql, params);
         return true;
     }
 }
