@@ -1,59 +1,65 @@
 import React, { useState, useEffect } from 'react';
+import { getMedicamentos, crearMedicamento, eliminarMedicamento } from '../services/api';
 import { Pill, Plus, Trash2, AlertCircle, Package, Search, DollarSign } from 'lucide-react';
 
 const MedicamentosInventario = () => {
-  const [medicamentos, setMedicamentos] = useState(() => {
-    const saved = localStorage.getItem('inventario_medicamentos_danubio');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [medicamentos, setMedicamentos] = useState([]);
 
   // 1. Agregamos 'precio' al estado inicial
   const [nuevoMed, setNuevoMed] = useState({ nombre: '', stock: '', unidad: 'ml', precio: '' });
   const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
-    localStorage.setItem('inventario_medicamentos_danubio', JSON.stringify(medicamentos));
-  }, [medicamentos]);
+    // Cargar inventario desde backend al montar el componente
+    const fetchData = async () => {
+      try {
+        const json = await getMedicamentos();
+        if (json.success) {
+          setMedicamentos(json.data);
+        }
+      } catch (e) {
+        console.error('Error al cargar medicamentos:', e);
+      }
+    };
+    fetchData();
+  }, []);
 
-  const agregarMed = (e) => {
+  const agregarMed = async (e) => {
     e.preventDefault();
-    // Validamos que el precio también esté presente
     if (!nuevoMed.nombre || !nuevoMed.stock || !nuevoMed.precio) {
-        alert("Por favor completa Nombre, Cantidad y Precio de compra");
-        return;
+      alert("Por favor completa Nombre, Cantidad y Precio de compra");
+      return;
     }
-    
-    const idUnico = Date.now();
-
-    // A. Lógica de Inventario (Tu código original)
-    const nuevo = { 
-        id: idUnico, 
-        nombre: nuevoMed.nombre.toUpperCase(), 
+    try {
+      const payload = {
+        nombre: nuevoMed.nombre,
         stock: parseFloat(nuevoMed.stock),
-        unidad: nuevoMed.unidad 
-    };
-    setMedicamentos([...medicamentos, nuevo]);
-
-    // B. EL ENLACE: Lógica de Gastos (Lo que conecta las ventanas)
-    const nuevoGasto = {
-        id: idUnico + 1,
-        fecha: new Date().toISOString().split('T')[0],
-        concepto: `COMPRA INSUMO: ${nuevoMed.nombre.toUpperCase()}`,
-        monto: parseFloat(nuevoMed.precio),
-        categoria: 'FARMACIA'
-    };
-
-    const gastosActuales = JSON.parse(localStorage.getItem('gastos_danubio') || '[]');
-    localStorage.setItem('gastos_danubio', JSON.stringify([nuevoGasto, ...gastosActuales]));
-
-    // Limpiamos todo el formulario incluyendo el precio
-    setNuevoMed({ nombre: '', stock: '', unidad: 'ml', precio: '' });
-    alert("Insumo guardado y gasto registrado en Finanzas");
+        unidad: nuevoMed.unidad,
+        precio_compra: parseFloat(nuevoMed.precio),
+        hacienda_id: 1 // TODO: obtener ID real de la hacienda
+      };
+      await crearMedicamento(payload);
+      // Refrescar lista desde backend
+      const json = await getMedicamentos();
+      if (json.success) setMedicamentos(json.data);
+      setNuevoMed({ nombre: '', stock: '', unidad: 'ml', precio: '' });
+      alert("Medicamento guardado en el servidor");
+    } catch (err) {
+      console.error('Error creando medicamento:', err);
+      alert('Error al guardar el medicamento');
+    }
   };
 
-  const eliminarMed = (id) => {
+  const eliminarMed = async (id) => {
     if (window.confirm("¿Eliminar este insumo?")) {
-      setMedicamentos(medicamentos.filter(m => m.id !== id));
+      try {
+        await eliminarMedicamento(id);
+        const json = await getMedicamentos();
+        if (json.success) setMedicamentos(json.data);
+      } catch (err) {
+        console.error('Error eliminando medicamento:', err);
+        alert('No se pudo eliminar');
+      }
     }
   };
 

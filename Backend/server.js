@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import animalRoutes from './routes/animalRoutes.js';
+import medicamentoRoutes from './routes/medicamentoRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import gastoRoutes from './routes/gastoRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // Rutas protegidas (middleware verificarToken aplicado antes de entrar a las rutas)
 app.use('/api/gastos', verificarToken, gastoRoutes);
+app.use('/api/medicamentos', verificarToken, medicamentoRoutes);
 
 // Rutas Públicas (Login/Registro)
 app.use('/api/auth', authRoutes); 

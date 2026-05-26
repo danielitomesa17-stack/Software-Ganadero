@@ -48,3 +48,25 @@ export const authenticatedFetch = async (endpoint, options = {}) => {
 
   return response;
 };
+
+// API wrappers for Medicamentos
+
+export const getMedicamentos = async () => {
+  const res = await authenticatedFetch('/medicamentos');
+  return res.json();
+};
+
+export const crearMedicamento = async (data) => {
+  const res = await authenticatedFetch('/medicamentos', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return res.json();
+};
+
+export const eliminarMedicamento = async (id) => {
+  const res = await authenticatedFetch(`/medicamentos/${id}`, {
+    method: 'DELETE',
+  });
+  return res.json();
+};
