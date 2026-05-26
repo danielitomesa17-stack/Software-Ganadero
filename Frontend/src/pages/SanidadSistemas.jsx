@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pill, Plus, Trash2, Package, DollarSign, Activity } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
 
-const MedicamentosInventario = () => {
+const SanidadSistemas = () => {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -228,4 +228,4 @@ const MedicamentosInventario = () => {
   );
 };
 
-export default MedicamentosInventario;
+export default SanidadSistemas;
