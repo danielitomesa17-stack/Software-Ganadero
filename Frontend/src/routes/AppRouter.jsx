@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Milk, Menu, LogOut, 
-  ChevronRight, ShieldCheck, Pill, BarChart3, Wallet, Settings, Scale 
+  ChevronRight, ShieldCheck, Pill, Activity, BarChart3, Wallet, Settings, Scale 
 } from 'lucide-react';
 
 // Importaciones de Páginas
