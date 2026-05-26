@@ -65,10 +65,14 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           </Link>
 
           <Link to="/app/ProduccionSistemas" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/ProduccionSistemas') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
-  <Scale size={22} />
-  {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Producción</span>}
-</Link>
-{/* ... otros links (Producción, Sanidad, Farmacia) */}
+            <Scale size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Producción</span>}
+          </Link>
+          {/* Enlace a Sanidad */}
+          <Link to="/app/SanidadSistemas" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/SanidadSistemas') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Activity size={22} />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Sanidad</span>}
+          </Link>
         </nav>
 
         <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full">
@@ -89,7 +93,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
               <Route path="inventario" element={<InventarioLista />} />
               <Route path="reportes" element={<ReportesSistemas />} />
               <Route path="ProduccionSistemas" element={<ProduccionSistemas />} />
-              <Route path="sanidad" element={<SanidadSistemas />} />
+              <Route path="SanidadSistemas" element={<SanidadSistemas />} />
               <Route path="MedicamentosInventario" element={<MedicamentosInventario />} />
               <Route path="gastos" element={<GastosSistemas />} />
               {/* RUTA PROTEGIDA PARA ADMIN */}
