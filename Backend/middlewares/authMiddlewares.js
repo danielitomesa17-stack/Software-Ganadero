@@ -57,7 +57,17 @@ export const verificarToken = async (req, res, next) => {
  */
 export const autorizarRoles = (...rolesPermitidos) => {
     return (req, res, next) => {
-        if (!req.user || !rolesPermitidos.includes(req.user.rol)) {
+        if (!req.user) {
+            return res.status(403).json({
+                success: false,
+                error: 'No tienes permisos necesarios para realizar esta acción.'
+            });
+        }
+        // Permitir siempre a SuperAdmin
+        if (req.user.rol === 'SuperAdmin') {
+            return next();
+        }
+        if (!rolesPermitidos.includes(req.user.rol)) {
             return res.status(403).json({
                 success: false,
                 error: 'No tienes permisos necesarios para realizar esta acción.'
