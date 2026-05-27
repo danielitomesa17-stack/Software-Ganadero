@@ -27,7 +27,7 @@ export const verificarToken = async (req, res, next) => {
         }
 
         if (usuarios[0].activo === 0) {
-            return res.status(403).json({ success: false, error: "Cuenta bloqueada. Acceso denegado." });
+            return res.status(401).json({ success: false, error: "Cuenta bloqueada. Acceso denegado." });
         }
         
         // 5. Inyectar la información del usuario en el objeto request

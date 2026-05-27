@@ -3,6 +3,8 @@ import { verificarToken } from '../middlewares/authMiddlewares.js';
 import { setTenant } from '../middlewares/setTenant.js';
 import gastoController from '../controllers/gastoController.js';
 
+const router = express.Router();
+
 // Definimos las rutas (EndPoints)
 router.get('/', verificarToken, setTenant, gastoController.getGastos);         // GET /api/gastos
 router.post('/', verificarToken, setTenant, gastoController.createGasto);      // POST /api/gastos

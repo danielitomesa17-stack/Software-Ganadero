@@ -38,12 +38,17 @@ export const authenticatedFetch = async (endpoint, options = {}) => {
     }
   });
 
-  // Si el servidor responde 403 (Acceso Denegado por bloqueo o falta de permisos)
-  if (response.status === 403) {
-    console.warn("Acceso denegado (403). Cerrando sesión y redirigiendo...");
+  // Si el servidor responde 401 (Autenticación fallida o token expirado/cuenta bloqueada)
+  if (response.status === 401) {
+    console.warn("Sesión inválida o cuenta bloqueada (401). Cerrando sesión y redirigiendo...");
     localStorage.removeItem('danubio_session'); // Eliminamos la sesión real
     window.location.href = '/login';            // Redirección inmediata
-    throw new Error("Usuario bloqueado o sin permisos necesarios");
+    throw new Error("Sesión expirada o cuenta bloqueada");
+  }
+
+  // Si el servidor responde 403 (Falta de permisos)
+  if (response.status === 403) {
+    throw new Error("No tienes permisos para realizar esta acción");
   }
 
   return response;

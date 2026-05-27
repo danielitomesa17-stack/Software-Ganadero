@@ -6,6 +6,7 @@ import {
     eliminarAnimal 
 } from '../controllers/animalController.js'; // 💡 Recuerda el .js en producción
 import { setTenant } from '../middlewares/setTenant.js'; // 💡 Recuerda el .js en producción
+import { verificarToken, autorizarRoles } from '../middlewares/authMiddlewares.js';
 
 const router = express.Router();
 

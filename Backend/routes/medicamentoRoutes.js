@@ -1,5 +1,5 @@
 // Backend/routes/medicamentoRoutes.js
-
+import express from 'express';
 import { verificarToken } from '../middlewares/authMiddlewares.js';
 import { setTenant } from '../middlewares/setTenant.js';
 import {
