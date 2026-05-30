@@ -3,20 +3,28 @@ import db from '../config/db.js';
 // 1. Obtener animales de la hacienda en sesión (Read)
 export const getAnimales = async (req, res) => {
     try {
-        // 🔒 Validación defensiva: Verificar que el middleware inyectó el usuario
         if (!req.user || !req.user.haciendaId) {
             return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
         }
 
-        const { haciendaId } = req.user; 
+        const { haciendaId } = req.user;
 
-        // 🚨 CORREGIDO: Se cambió 'hacienda_id' por 'Hacienda_id' para que coincida con tu MySQL Workbench
         const [results] = await db.query(
             "SELECT * FROM animales WHERE Hacienda_id = ? ORDER BY id DESC",
             [haciendaId]
         );
-        
-        res.json(results);
+
+        const animalesConFoto = results.map(animal => {
+            if (animal.foto && Buffer.isBuffer(animal.foto)) {
+                return {
+                    ...animal,
+                    foto: 'data:image/jpeg;base64,' + animal.foto.toString('base64')
+                };
+            }
+            return animal;
+        });
+
+        res.json(animalesConFoto);
     } catch (err) {
         res.status(500).json({ error: "Error al obtener animales", detalle: err.message });
     }
