@@ -70,6 +70,9 @@ const InventarioLista = () => {
       const res = await authenticatedFetch(`/animales/${animal.id}`);
       if (res.ok) {
         const animalActualizado = await res.json();
+        console.log("Animal cargado del servidor:", animalActualizado);
+        console.log("Foto recibida:", animalActualizado.foto ? "SÍ" : "NO");
+
         setEditingAnimal({
           id: animalActualizado.id,
           chapeta: animalActualizado.caravana_id || 'SIN CAP',
