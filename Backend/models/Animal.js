@@ -22,9 +22,9 @@ class Animal {
    * @param {Object} data - Campos del animal, incluye hacienda_id.
    */
   static async create(data) {
-    const { caravana_id, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial } = data;
-    const sql = `INSERT INTO animales (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.query(sql, [caravana_id, peso_inicial, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial]);
+    const { caravana_id, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto } = data;
+    const sql = `INSERT INTO animales (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await pool.query(sql, [caravana_id, peso_inicial, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto]);
     return result.insertId;
   }
 
@@ -39,6 +39,7 @@ class Animal {
     if (data.estado !== undefined) { fields.push('estado = ?'); values.push(data.estado); }
     if (data.hacienda_id !== undefined) { fields.push('hacienda_id = ?'); values.push(data.hacienda_id); }
     if (data.historial !== undefined) { fields.push('historial = ?'); values.push(data.historial); }
+    if (data.foto !== undefined) { fields.push('foto = ?'); values.push(data.foto); }
     if (fields.length === 0) return true;
     const setClause = fields.join(', ');
     const sql = `UPDATE animales SET ${setClause} WHERE id = ?`;

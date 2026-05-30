@@ -12,14 +12,16 @@ const InventarioLista = () => {
   const [editingAnimal, setEditingAnimal] = useState(null);
   const [viewingAnimal, setViewingAnimal] = useState(null);
   const [vistaTabular, setVistaTabular] = useState(true);
+  const [fotoEdit, setFotoEdit] = useState(null);
 
   const estadoInicial = {
-    chapeta: '', 
-    raza: 'Brahman', 
-    peso: '', 
-    potrero: 'Levante', 
-    sexo: 'Hembra', 
-    estado: 'Sano'
+    chapeta: '',
+    raza: 'Brahman',
+    peso: '',
+    potrero: 'Levante',
+    sexo: 'Hembra',
+    estado: 'Sano',
+    foto: null
   };
 
   const [formData, setFormData] = useState(estadoInicial);
@@ -40,9 +42,10 @@ const InventarioLista = () => {
         raza: a.raza || 'Brahman',
         pesoInicial: Number(a.peso_inicial) || 0,
         pesoActual: Number(a.peso_actual) || Number(a.peso_inicial) || 0,
-        potrero: a.lote || 'General', 
+        potrero: a.lote || 'General',
         sexo: a.sexo || 'Hembra',
         estado: a.estado || 'Sano',
+        foto: a.foto || null,
         historial: typeof a.historial === 'string' ? JSON.parse(a.historial) : (a.historial || [])
       })));
     } catch (error) {
@@ -54,10 +57,20 @@ const InventarioLista = () => {
 
   useEffect(() => { cargarAnimales(); }, [cargarAnimales]);
   
-  // 2. REGISTRAR ANIMAL 
+  // 2. REGISTRAR ANIMAL
   const handleGuardar = async (e) => {
     e.preventDefault();
     try {
+      let fotoBase64 = null;
+      if (formData.foto) {
+        fotoBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(formData.foto);
+        });
+      }
+
       const res = await authenticatedFetch('/animales', {
         method: 'POST',
         body: JSON.stringify({
@@ -66,7 +79,8 @@ const InventarioLista = () => {
           lote: formData.potrero,
           raza: formData.raza,
           sexo: formData.sexo,
-          estado: formData.estado
+          estado: formData.estado,
+          foto: fotoBase64
         })
       });
       if (res.ok) {
@@ -80,17 +94,29 @@ const InventarioLista = () => {
   const handleActualizar = async (e) => {
     e.preventDefault();
     try {
+      let fotoBase64 = editingAnimal.foto;
+      if (fotoEdit) {
+        fotoBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(fotoEdit);
+        });
+      }
+
       const res = await authenticatedFetch(`/animales/${editingAnimal.id}`, {
         method: 'PUT',
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
           estado: editingAnimal.estado,
-          lote: editingAnimal.potrero
+          lote: editingAnimal.potrero,
+          foto: fotoBase64
         })
       });
       if (res.ok) {
         await cargarAnimales();
         setEditingAnimal(null);
+        setFotoEdit(null);
       }
     } catch { alert("Error al actualizar"); }
   };
@@ -266,6 +292,10 @@ const InventarioLista = () => {
                 <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Lote o Potrero</label>
                 <input placeholder="Ej: Levante, Sabana" className="w-full p-4 bg-slate-50 rounded-xl font-bold text-sm outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700" value={formData.potrero} onChange={e => setFormData({...formData, potrero: e.target.value})} />
               </div>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Foto (Opcional)</label>
+                <input type="file" accept="image/jpeg" className="w-full p-4 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" onChange={e => setFormData({...formData, foto: e.target.files?.[0] || null})} />
+              </div>
               <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs tracking-wider mt-2 hover:bg-green-600 transition-all shadow-md shadow-slate-900/10">Guardar Registro</button>
               <button type="button" onClick={() => setIsModalOpen(false)} className="w-full text-slate-400 font-bold text-[10px] uppercase tracking-wider text-center pt-1">Cancelar</button>
             </form>
@@ -276,13 +306,23 @@ const InventarioLista = () => {
       {/* MODAL EDITAR (REGISTRO DE NUEVO PESAJE) */}
       {editingAnimal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-xl border border-slate-100">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-xl border border-slate-100 max-h-[85vh] overflow-y-auto">
             <h2 className="text-2xl font-black mb-1 uppercase tracking-tight text-slate-900">Control de Pesaje</h2>
             <p className="text-[10px] text-slate-400 font-bold uppercase mb-6">Módulo de control de crecimiento</p>
             <form onSubmit={handleActualizar} className="space-y-4">
               <div>
                 <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Animal Seleccionado</label>
                 <input className="w-full p-4 bg-slate-100 rounded-xl font-bold text-sm text-slate-500 cursor-not-allowed uppercase border border-slate-200/50" value={editingAnimal.chapeta} disabled />
+              </div>
+              {(editingAnimal.foto || fotoEdit) && (
+                <div>
+                  <label className="block text-[9px] font-black text-slate-400 uppercase mb-2">Foto Actual</label>
+                  <img src={fotoEdit ? URL.createObjectURL(fotoEdit) : editingAnimal.foto} alt={editingAnimal.chapeta} className="w-full h-40 object-cover rounded-xl border border-slate-200" />
+                </div>
+              )}
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Cambiar Foto (Opcional)</label>
+                <input type="file" accept="image/jpeg" className="w-full p-4 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" onChange={e => setFotoEdit(e.target.files?.[0] || null)} />
               </div>
               <div>
                 <label className="block text-[9px] font-black text-green-600 uppercase mb-1">Nuevo Peso Registrado (KG)</label>
@@ -302,7 +342,7 @@ const InventarioLista = () => {
                 </div>
               </div>
               <button type="submit" className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase text-xs tracking-wider mt-2 hover:bg-green-700 transition-all shadow-md shadow-green-900/10">Actualizar Pesaje</button>
-              <button type="button" onClick={() => setEditingAnimal(null)} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
+              <button type="button" onClick={() => { setEditingAnimal(null); setFotoEdit(null); }} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
             </form>
           </div>
         </div>
@@ -313,11 +353,17 @@ const InventarioLista = () => {
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white p-8 md:p-10 rounded-[2.5rem] w-full max-w-2xl shadow-xl relative max-h-[85vh] overflow-y-auto border border-slate-100">
             <button onClick={() => setViewingAnimal(null)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900 transition-colors"><X size={20}/></button>
-            
+
             <div className="mb-6">
               <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">Ficha de Trazabilidad</span>
               <h2 className="text-3xl font-black text-slate-900 uppercase mt-3 tracking-tight">Bovino {viewingAnimal.chapeta}</h2>
             </div>
+
+            {viewingAnimal.foto && (
+              <div className="mb-6">
+                <img src={viewingAnimal.foto} alt={viewingAnimal.chapeta} className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-md" />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 text-slate-700">
               <div className="bg-slate-50 p-4 rounded-xl"><span className="block text-[9px] font-black text-slate-400 uppercase mb-0.5">Raza</span><span className="text-xs font-bold">{viewingAnimal.raza}</span></div>
