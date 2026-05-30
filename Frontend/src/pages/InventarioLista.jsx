@@ -64,7 +64,34 @@ const InventarioLista = () => {
     });
   };
 
-  // Función para abrir modal de edición con datos completos del servidor
+  // Función para abrir modal de vista con datos completos del servidor
+  const abrirVerAnimal = async (animal) => {
+    try {
+      const res = await authenticatedFetch(`/animales/${animal.id}`);
+      if (res.ok) {
+        const animalActualizado = await res.json();
+        console.log("Animal cargado para ver:", animalActualizado);
+
+        setViewingAnimal({
+          id: animalActualizado.id,
+          chapeta: animalActualizado.caravana_id || 'SIN CAP',
+          raza: animalActualizado.raza,
+          pesoInicial: Number(animalActualizado.peso_inicial),
+          pesoActual: Number(animalActualizado.peso_actual),
+          potrero: animalActualizado.lote,
+          sexo: animalActualizado.sexo,
+          estado: animalActualizado.estado,
+          foto: animalActualizado.foto || null,
+          historial: typeof animalActualizado.historial === 'string'
+            ? JSON.parse(animalActualizado.historial)
+            : (animalActualizado.historial || [])
+        });
+      }
+    } catch (err) {
+      console.error("Error al cargar animal para ver:", err);
+      setViewingAnimal(animal);
+    }
+  };
   const abrirEditarAnimal = async (animal) => {
     try {
       const res = await authenticatedFetch(`/animales/${animal.id}`);
@@ -292,7 +319,7 @@ const InventarioLista = () => {
                       +{(a.pesoActual - a.pesoInicial).toFixed(1)} KG
                     </td>
                     <td className="px-8 py-5 text-right space-x-1 whitespace-nowrap">
-                      <button onClick={() => setViewingAnimal(a)} className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Eye size={16}/></button>
+                      <button onClick={() => abrirVerAnimal(a)} className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Eye size={16}/></button>
                       <button onClick={() => abrirEditarAnimal(a)} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"><Edit3 size={16}/></button>
                       <button onClick={() => eliminarAnimal(a.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
                     </td>
@@ -320,7 +347,7 @@ const InventarioLista = () => {
                         <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{a.chapeta}</h3>
                       </div>
                     </div>
-                    <button onClick={() => setViewingAnimal(a)} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all">
+                    <button onClick={() => abrirVerAnimal(a)} className="p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all">
                       <Eye size={18}/>
                     </button>
                   </div>
