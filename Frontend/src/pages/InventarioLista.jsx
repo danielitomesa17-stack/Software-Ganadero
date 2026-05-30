@@ -13,6 +13,7 @@ const InventarioLista = () => {
   const [viewingAnimal, setViewingAnimal] = useState(null);
   const [vistaTabular, setVistaTabular] = useState(true);
   const [fotoEdit, setFotoEdit] = useState(null);
+  const [fotoPrevie, setFotoPreview] = useState(null);
 
   const estadoInicial = {
     chapeta: '',
@@ -117,8 +118,12 @@ const InventarioLista = () => {
         await cargarAnimales();
         setEditingAnimal(null);
         setFotoEdit(null);
+        setFotoPreview(null);
       }
-    } catch { alert("Error al actualizar"); }
+    } catch (err) {
+      alert("Error al actualizar");
+      console.error(err);
+    }
   };
 
   const eliminarAnimal = async (id) => {
@@ -314,15 +319,23 @@ const InventarioLista = () => {
                 <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Animal Seleccionado</label>
                 <input className="w-full p-4 bg-slate-100 rounded-xl font-bold text-sm text-slate-500 cursor-not-allowed uppercase border border-slate-200/50" value={editingAnimal.chapeta} disabled />
               </div>
-              {(editingAnimal.foto || fotoEdit) && (
+              {(editingAnimal.foto || fotoEdit || fotoPrevie) && (
                 <div>
                   <label className="block text-[9px] font-black text-slate-400 uppercase mb-2">Foto Actual</label>
-                  <img src={fotoEdit ? URL.createObjectURL(fotoEdit) : editingAnimal.foto} alt={editingAnimal.chapeta} className="w-full h-40 object-cover rounded-xl border border-slate-200" />
+                  <img src={fotoPrevie || editingAnimal.foto} alt={editingAnimal.chapeta} className="w-full h-40 object-cover rounded-xl border border-slate-200" />
                 </div>
               )}
               <div>
                 <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Cambiar Foto (Opcional)</label>
-                <input type="file" accept="image/jpeg" className="w-full p-4 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" onChange={e => setFotoEdit(e.target.files?.[0] || null)} />
+                <input type="file" accept="image/jpeg" className="w-full p-4 bg-slate-50 rounded-xl font-bold text-xs outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-700" onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFotoEdit(file);
+                    const reader = new FileReader();
+                    reader.onload = () => setFotoPreview(reader.result);
+                    reader.readAsDataURL(file);
+                  }
+                }} />
               </div>
               <div>
                 <label className="block text-[9px] font-black text-green-600 uppercase mb-1">Nuevo Peso Registrado (KG)</label>
@@ -342,7 +355,7 @@ const InventarioLista = () => {
                 </div>
               </div>
               <button type="submit" className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase text-xs tracking-wider mt-2 hover:bg-green-700 transition-all shadow-md shadow-green-900/10">Actualizar Pesaje</button>
-              <button type="button" onClick={() => { setEditingAnimal(null); setFotoEdit(null); }} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
+              <button type="button" onClick={() => { setEditingAnimal(null); setFotoEdit(null); setFotoPreview(null); }} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
             </form>
           </div>
         </div>
