@@ -71,9 +71,9 @@ const InventarioLista = () => {
       if (res.ok) {
         const animalActualizado = await res.json();
         console.log("Animal cargado del servidor:", animalActualizado);
-        console.log("Foto recibida:", animalActualizado.foto ? "SÍ" : "NO");
+        console.log("Foto recibida:", animalActualizado.foto ? "SÍ (longitud: " + String(animalActualizado.foto).length + ")" : "NO");
 
-        setEditingAnimal({
+        const nuevoAnimal = {
           id: animalActualizado.id,
           chapeta: animalActualizado.caravana_id || 'SIN CAP',
           raza: animalActualizado.raza,
@@ -86,7 +86,10 @@ const InventarioLista = () => {
           historial: typeof animalActualizado.historial === 'string'
             ? JSON.parse(animalActualizado.historial)
             : (animalActualizado.historial || [])
-        });
+        };
+
+        console.log("Estado que se va a guardar - foto:", nuevoAnimal.foto ? "SÍ" : "null");
+        setEditingAnimal(nuevoAnimal);
       }
     } catch (err) {
       console.error("Error al cargar animal:", err);
@@ -124,6 +127,13 @@ const InventarioLista = () => {
   }, []);
 
   useEffect(() => { cargarAnimales(); }, [cargarAnimales]);
+
+  // Debug: imprimir cuando cambia editingAnimal
+  useEffect(() => {
+    if (editingAnimal) {
+      console.log("editingAnimal actualizado en React - foto:", editingAnimal.foto ? "SÍ" : "null");
+    }
+  }, [editingAnimal]);
   
   // 2. REGISTRAR ANIMAL
   const handleGuardar = async (e) => {
