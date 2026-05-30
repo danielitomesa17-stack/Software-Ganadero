@@ -1,5 +1,35 @@
 import db from '../config/db.js';
 
+// 1.5 Obtener un animal específico por ID
+export const getAnimalById = async (req, res) => {
+    try {
+        if (!req.user || !req.user.haciendaId) {
+            return res.status(401).json({ error: "No autorizado." });
+        }
+
+        const { id } = req.params;
+        const { haciendaId } = req.user;
+
+        const [results] = await db.query(
+            "SELECT * FROM animales WHERE id = ? AND Hacienda_id = ?",
+            [id, haciendaId]
+        );
+
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Animal no encontrado" });
+        }
+
+        const animal = results[0];
+        if (animal.foto && Buffer.isBuffer(animal.foto)) {
+            animal.foto = 'data:image/jpeg;base64,' + animal.foto.toString('base64');
+        }
+
+        res.json(animal);
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener animal", detalle: err.message });
+    }
+};
+
 // 1. Obtener animales de la hacienda en sesión (Read)
 export const getAnimales = async (req, res) => {
     try {

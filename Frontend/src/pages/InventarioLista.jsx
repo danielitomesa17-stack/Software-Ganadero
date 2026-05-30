@@ -64,6 +64,33 @@ const InventarioLista = () => {
     });
   };
 
+  // Función para abrir modal de edición con datos completos del servidor
+  const abrirEditarAnimal = async (animal) => {
+    try {
+      const res = await authenticatedFetch(`/animales/${animal.id}`);
+      if (res.ok) {
+        const animalActualizado = await res.json();
+        setEditingAnimal({
+          id: animalActualizado.id,
+          chapeta: animalActualizado.caravana_id || 'SIN CAP',
+          raza: animalActualizado.raza,
+          pesoInicial: Number(animalActualizado.peso_inicial),
+          pesoActual: Number(animalActualizado.peso_actual),
+          potrero: animalActualizado.lote,
+          sexo: animalActualizado.sexo,
+          estado: animalActualizado.estado,
+          foto: animalActualizado.foto || null,
+          historial: typeof animalActualizado.historial === 'string'
+            ? JSON.parse(animalActualizado.historial)
+            : (animalActualizado.historial || [])
+        });
+      }
+    } catch (err) {
+      console.error("Error al cargar animal:", err);
+      setEditingAnimal(animal);
+    }
+  };
+
   // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
   const cargarAnimales = useCallback(async () => {
     try {
@@ -253,7 +280,7 @@ const InventarioLista = () => {
                     </td>
                     <td className="px-8 py-5 text-right space-x-1 whitespace-nowrap">
                       <button onClick={() => setViewingAnimal(a)} className="p-2 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Eye size={16}/></button>
-                      <button onClick={() => setEditingAnimal(a)} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"><Edit3 size={16}/></button>
+                      <button onClick={() => abrirEditarAnimal(a)} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"><Edit3 size={16}/></button>
                       <button onClick={() => eliminarAnimal(a.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
                     </td>
                   </tr>
@@ -302,7 +329,7 @@ const InventarioLista = () => {
                 <div className="p-4 px-6 flex justify-between items-center bg-white">
                   <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase ${a.sexo === 'Hembra' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'}`}>{a.sexo}</div>
                   <div className="flex gap-0.5">
-                    <button onClick={() => setEditingAnimal(a)} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"><Edit3 size={16}/></button>
+                    <button onClick={() => abrirEditarAnimal(a)} className="p-2 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all"><Edit3 size={16}/></button>
                     <button onClick={() => eliminarAnimal(a.id)} className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16}/></button>
                   </div>
                 </div>
