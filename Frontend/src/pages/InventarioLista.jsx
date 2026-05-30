@@ -25,7 +25,44 @@ const InventarioLista = () => {
     foto: null
   };
 
-  const [formData, setFormData] = useState(estadoInicial);
+  // Función para comprimir imagen
+  const comprimirImagen = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
 
   // 1. OBTENER ANIMALES (SaaS - Lee la hacienda directo del Token JWT)
   const cargarAnimales = useCallback(async () => {
@@ -64,12 +101,7 @@ const InventarioLista = () => {
     try {
       let fotoBase64 = null;
       if (formData.foto) {
-        fotoBase64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(formData.foto);
-        });
+        fotoBase64 = await comprimirImagen(formData.foto);
       }
 
       const res = await authenticatedFetch('/animales', {
@@ -94,35 +126,49 @@ const InventarioLista = () => {
 
   const handleActualizar = async (e) => {
     e.preventDefault();
+
+    if (!editingAnimal.pesoActual) {
+      alert("El peso es obligatorio");
+      return;
+    }
+
     try {
       let fotoBase64 = editingAnimal.foto;
       if (fotoEdit) {
-        fotoBase64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(fotoEdit);
-        });
+        fotoBase64 = await comprimirImagen(fotoEdit);
       }
+
+      const payload = {
+        peso_actual: Number(editingAnimal.pesoActual),
+        estado: editingAnimal.estado,
+        lote: editingAnimal.potrero,
+        foto: fotoBase64
+      };
+
+      console.log("Enviando actualización:", payload);
 
       const res = await authenticatedFetch(`/animales/${editingAnimal.id}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          peso_actual: Number(editingAnimal.pesoActual),
-          estado: editingAnimal.estado,
-          lote: editingAnimal.potrero,
-          foto: fotoBase64
-        })
+        body: JSON.stringify(payload)
       });
+
+      console.log("Respuesta del servidor:", res.status);
+
       if (res.ok) {
+        const data = await res.json();
+        console.log("Actualización exitosa:", data);
         await cargarAnimales();
         setEditingAnimal(null);
         setFotoEdit(null);
         setFotoPreview(null);
+      } else {
+        const error = await res.json();
+        console.error("Error del servidor:", error);
+        alert("Error al actualizar: " + (error.error || "Error desconocido"));
       }
     } catch (err) {
-      alert("Error al actualizar");
-      console.error(err);
+      console.error("Error en handleActualizar:", err);
+      alert("Error al actualizar: " + err.message);
     }
   };
 
