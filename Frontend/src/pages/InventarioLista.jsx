@@ -25,6 +25,8 @@ const InventarioLista = () => {
     foto: null
   };
 
+  const [formData, setFormData] = useState(estadoInicial);
+
   // Función para comprimir imagen
   const comprimirImagen = (file) => {
     return new Promise((resolve, reject) => {
