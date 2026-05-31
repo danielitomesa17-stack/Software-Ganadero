@@ -168,7 +168,9 @@ const InventarioLista = () => {
     try {
       let fotoBase64 = null;
       if (formData.foto) {
-        fotoBase64 = await comprimirImagen(formData.foto);
+        const foto = await comprimirImagen(formData.foto);
+        // Guardar solo el base64 sin el prefijo "data:image/jpeg;base64,"
+        fotoBase64 = foto.includes(',') ? foto.split(',')[1] : foto;
       }
 
       const res = await authenticatedFetch('/animales', {
@@ -202,7 +204,9 @@ const InventarioLista = () => {
     try {
       let fotoBase64 = editingAnimal.foto;
       if (fotoEdit) {
-        fotoBase64 = await comprimirImagen(fotoEdit);
+        const foto = await comprimirImagen(fotoEdit);
+        // Guardar solo el base64 sin el prefijo "data:image/jpeg;base64,"
+        fotoBase64 = foto.includes(',') ? foto.split(',')[1] : foto;
       }
 
       const payload = {
