@@ -58,7 +58,7 @@ const InventarioLista = () => {
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.7));
+          resolve(canvas.toDataURL("image/jpeg", 0.4));
         };
         img.onerror = reject;
       };
@@ -441,7 +441,7 @@ const InventarioLista = () => {
               {(editingAnimal.foto || fotoEdit || fotoPrevie) && (
                 <div>
                   <label className="block text-[9px] font-black text-slate-400 uppercase mb-2">Foto Actual</label>
-                  <img src={fotoPrevie || editingAnimal.foto} alt={editingAnimal.chapeta} className="w-full h-40 object-cover rounded-xl border border-slate-200" />
+                  <img src={fotoPrevie || (editingAnimal.foto && editingAnimal.foto.startsWith('data:') ? editingAnimal.foto : `data:image/jpeg;base64,${editingAnimal.foto}`)} alt={editingAnimal.chapeta} className="w-full h-40 object-cover rounded-xl border border-slate-200" />
                 </div>
               )}
               <div>
@@ -493,7 +493,7 @@ const InventarioLista = () => {
 
             {viewingAnimal.foto && (
               <div className="mb-6">
-                <img src={viewingAnimal.foto} alt={viewingAnimal.chapeta} className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-md" />
+                <img src={viewingAnimal.foto.startsWith('data:') ? viewingAnimal.foto : `data:image/jpeg;base64,${viewingAnimal.foto}`} alt={viewingAnimal.chapeta} className="w-full h-64 object-cover rounded-2xl border border-slate-200 shadow-md" />
               </div>
             )}
 
