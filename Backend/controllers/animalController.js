@@ -74,6 +74,8 @@ export const registrarAnimal = async (req, res) => {
             { fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_inicial) }
         ]);
 
+        const fotoBuffer = foto ? Buffer.from(foto, 'base64') : null;
+
         const sql = `INSERT INTO animales
             (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -88,7 +90,7 @@ export const registrarAnimal = async (req, res) => {
             estado,
             haciendaId,
             historialInicial,
-            foto || null
+            fotoBuffer
         ]);
 
         res.json({ message: "Animal registrado con éxito", id: result.insertId });
@@ -142,7 +144,7 @@ export const actualizarAnimal = async (req, res) => {
         }
         if (foto !== undefined) {
             updateFields.push("foto = ?");
-            updateValues.push(foto);
+            updateValues.push(foto ? Buffer.from(foto, 'base64') : null);
         }
 
         updateFields.push("historial = ?");
