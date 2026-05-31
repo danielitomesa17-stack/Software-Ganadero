@@ -58,7 +58,7 @@ const InventarioLista = () => {
           canvas.height = height;
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.4));
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
         };
         img.onerror = reject;
       };
