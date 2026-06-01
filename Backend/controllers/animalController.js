@@ -10,8 +10,20 @@ const fotoToDataUrl = (foto) => {
     // Ya es un data-URL completo
     if (typeof foto === 'string' && foto.startsWith('data:')) return foto;
 
-    // Es un Buffer o Uint8Array (binario real)
+    // Es un Buffer o Uint8Array (mysql2 devuelve esto para LONGBLOB)
     if (Buffer.isBuffer(foto) || foto instanceof Uint8Array) {
+        // ¿Es binario JPEG real? (El magic number de JPEG es FF D8 FF...)
+        if (foto[0] === 0xFF && foto[1] === 0xD8) {
+            return 'data:image/jpeg;base64,' + Buffer.from(foto).toString('base64');
+        }
+        
+        // Si no es FF D8, tal vez se guardó el STRING base64 directamente en el BLOB
+        const str = Buffer.from(foto).toString('utf8');
+        if (str.startsWith('/9j/') || str.startsWith('iVBORw0KGgo') || str.startsWith('data:')) {
+            return str.startsWith('data:') ? str : 'data:image/jpeg;base64,' + str;
+        }
+
+        // Fallback genérico: codificar a base64
         return 'data:image/jpeg;base64,' + Buffer.from(foto).toString('base64');
     }
 
