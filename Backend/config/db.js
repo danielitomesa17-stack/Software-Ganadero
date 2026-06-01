@@ -10,20 +10,7 @@ const pool = mysql.createPool({
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0,
-  // Convierte columnas BLOB/LONGBLOB a string base64 automáticamente
-  typeCast: function (field, next) {
-    if (
-      field.type === 'BLOB' ||
-      field.type === 'LONG_BLOB' ||
-      field.type === 'MEDIUM_BLOB' ||
-      field.type === 'TINY_BLOB'
-    ) {
-      const buf = field.buffer();
-      return buf ? buf.toString('base64') : null;
-    }
-    return next();
-  }
+  queueLimit: 0
 });
 
 // Exportación por defecto para que funcione el 'import db from...' en tus controladores
