@@ -12,6 +12,23 @@ const getImageSrc = (foto) => {
   return `data:image/jpeg;base64,${foto}`;
 };
 
+// Helper: parsea el historial de forma segura para que no rompa la app si el JSON es inválido
+const parseHistorialSeguro = (historial) => {
+  if (!historial) return [];
+  if (typeof historial !== 'string') return historial;
+  try {
+    return JSON.parse(historial);
+  } catch (e) {
+    // Si parece base64 (por el issue del backend temporal), intentamos decodificarlo
+    try {
+      return JSON.parse(atob(historial));
+    } catch (e2) {
+      console.warn("No se pudo parsear el historial:", historial.substring(0, 50));
+      return [];
+    }
+  }
+};
+
 const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -81,7 +98,7 @@ const InventarioLista = () => {
           estado: d.estado,
           // El backend ya envía 'data:image/jpeg;base64,...'
           foto: d.foto || null,
-          historial: typeof d.historial === 'string' ? JSON.parse(d.historial) : (d.historial || [])
+          historial: parseHistorialSeguro(d.historial)
         });
       }
     } catch (err) {
@@ -107,7 +124,7 @@ const InventarioLista = () => {
           sexo: d.sexo,
           estado: d.estado,
           foto: d.foto || null,
-          historial: typeof d.historial === 'string' ? JSON.parse(d.historial) : (d.historial || [])
+          historial: parseHistorialSeguro(d.historial)
         });
       }
     } catch (err) {
@@ -133,7 +150,7 @@ const InventarioLista = () => {
         sexo: a.sexo || 'Hembra',
         estado: a.estado || 'Sano',
         foto: a.foto || null,
-        historial: typeof a.historial === 'string' ? JSON.parse(a.historial) : (a.historial || [])
+        historial: parseHistorialSeguro(a.historial)
       })));
     } catch (error) {
       console.error("Error al cargar:", error);
