@@ -20,10 +20,10 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans">
+    <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       {/* SIDEBAR */}
-      <aside className={`${sidebarOpen ? 'w-72' : 'w-24'} bg-[#0F172A] p-6 flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl`}>
-        <div className="flex items-center gap-4 px-2 mb-12">
+      <aside className={`${sidebarOpen ? 'w-72' : 'w-24'} bg-[#0F172A] p-6 flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl h-screen`}>
+        <div className="flex items-center gap-4 px-2 mb-12 shrink-0">
           <div className="min-w-[45px] h-[45px] bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg font-black text-xl">
             {sesion.nombre_hacienda?.substring(0, 2).toUpperCase() || 'HD'}
           </div>
@@ -35,7 +35,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           )}
         </div>
 
-        <nav className="flex-1 space-y-3">
+        <nav className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 mb-4">
           <Link to="/app/inventario" className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/inventario') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
             <LayoutDashboard size={22} />
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Inventario</span>}
@@ -75,7 +75,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           </Link>
         </nav>
 
-        <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full">
+        <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full shrink-0">
           <LogOut size={22} />
           {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest">Cerrar Sesión</span>}
         </button>
