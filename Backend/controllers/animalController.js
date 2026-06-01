@@ -1,5 +1,33 @@
 import db from '../config/db.js';
 
+/**
+ * Convierte el campo foto (LONGBLOB) a un data-URL válido.
+ * mysql2 puede devolver el BLOB como Buffer, Uint8Array, o String.
+ */
+const fotoToDataUrl = (foto) => {
+    if (!foto) return null;
+
+    // Ya es un data-URL completo
+    if (typeof foto === 'string' && foto.startsWith('data:')) return foto;
+
+    // Es un Buffer o Uint8Array (binario real)
+    if (Buffer.isBuffer(foto) || foto instanceof Uint8Array) {
+        return 'data:image/jpeg;base64,' + Buffer.from(foto).toString('base64');
+    }
+
+    // Es un string base64 puro (sin prefijo)
+    if (typeof foto === 'string' && foto.length > 0) {
+        return 'data:image/jpeg;base64,' + foto;
+    }
+
+    // Objeto con propiedad buffer (algunos drivers devuelven esto)
+    if (foto && typeof foto === 'object' && foto.buffer) {
+        return 'data:image/jpeg;base64,' + Buffer.from(foto.buffer).toString('base64');
+    }
+
+    return null;
+};
+
 // 1.5 Obtener un animal específico por ID
 export const getAnimalById = async (req, res) => {
     try {
@@ -20,11 +48,10 @@ export const getAnimalById = async (req, res) => {
         }
 
         const animal = results[0];
-        if (animal.foto && Buffer.isBuffer(animal.foto)) {
-            animal.foto = 'data:image/jpeg;base64,' + animal.foto.toString('base64');
-        }
+        const fotoUrl = fotoToDataUrl(animal.foto);
+        console.log(`[getAnimalById] id=${id} foto tipo=${typeof animal.foto} isBuffer=${Buffer.isBuffer(animal.foto)} fotoUrl=${fotoUrl ? 'OK (' + fotoUrl.length + ' chars)' : 'null'}`);
 
-        res.json(animal);
+        res.json({ ...animal, foto: fotoUrl });
     } catch (err) {
         res.status(500).json({ error: "Error al obtener animal", detalle: err.message });
     }
@@ -44,21 +71,17 @@ export const getAnimales = async (req, res) => {
             [haciendaId]
         );
 
-        const animalesConFoto = results.map(animal => {
-            if (animal.foto && Buffer.isBuffer(animal.foto)) {
-                return {
-                    ...animal,
-                    foto: 'data:image/jpeg;base64,' + animal.foto.toString('base64')
-                };
-            }
-            return animal;
-        });
+        const animalesConFoto = results.map(animal => ({
+            ...animal,
+            foto: fotoToDataUrl(animal.foto)
+        }));
 
         res.json(animalesConFoto);
     } catch (err) {
         res.status(500).json({ error: "Error al obtener animales", detalle: err.message });
     }
 };
+
 
 // 2. Registrar animal amarrado a la hacienda en sesión (Create)
 export const registrarAnimal = async (req, res) => {
