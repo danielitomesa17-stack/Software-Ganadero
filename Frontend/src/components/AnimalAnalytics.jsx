@@ -1,7 +1,11 @@
-import React, { useMemo } from 'react';
-import { TrendingUp } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { TrendingUp, Edit3, Trash2, X, Check } from 'lucide-react';
+import { authenticatedFetch } from '../services/api';
 
-const AnimalAnalytics = ({ animal }) => {
+const AnimalAnalytics = ({ animal, onUpdate }) => {
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editForm, setEditForm] = useState({ fecha: '', peso: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   if (!animal || !animal.historial || animal.historial.length === 0) {
     return (
       <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center text-[10px] font-bold text-slate-400 italic">
@@ -102,6 +106,7 @@ const AnimalAnalytics = ({ animal }) => {
                 <th className="px-3 py-2 text-right text-slate-400">Peso</th>
                 <th className="px-3 py-2 text-right text-slate-400">Cambio</th>
                 <th className="px-3 py-2 text-right text-slate-400">Días</th>
+                <th className="px-3 py-2 text-right text-slate-400">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -112,6 +117,89 @@ const AnimalAnalytics = ({ animal }) => {
                 const diasDesdeInicio = Math.floor(
                   (new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / (1000 * 60 * 60 * 24)
                 );
+                
+                const isEditing = editingIndex === idx;
+
+                const handleEditClick = () => {
+                  setEditingIndex(idx);
+                  // convertir fecha DD/MM/YYYY a YYYY-MM-DD para el input type date
+                  const [d, m, y] = registro.fecha.split('/');
+                  setEditForm({ fecha: `${y}-${m}-${d}`, peso: registro.peso });
+                };
+
+                const handleCancelEdit = () => {
+                  setEditingIndex(null);
+                  setEditForm({ fecha: '', peso: '' });
+                };
+
+                const handleSaveEdit = async () => {
+                  if (!editForm.fecha || !editForm.peso) return;
+                  try {
+                    setIsSubmitting(true);
+                    const [y, m, d] = editForm.fecha.split('-');
+                    const nuevaFecha = `${d}/${m}/${y}`;
+                    
+                    const res = await authenticatedFetch(`/animales/${animal.id}/pesaje`, {
+                      method: 'PUT',
+                      body: JSON.stringify({
+                        fechaOriginal: registro.fecha,
+                        nuevaFecha: nuevaFecha,
+                        nuevoPeso: Number(editForm.peso)
+                      })
+                    });
+
+                    if (res.ok) {
+                      setEditingIndex(null);
+                      if (onUpdate) onUpdate();
+                    } else {
+                      const error = await res.json();
+                      alert("Error al actualizar: " + (error.error || "Error desconocido"));
+                    }
+                  } catch (err) {
+                    alert("Error: " + err.message);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                };
+
+                const handleDeleteClick = async () => {
+                  if (!window.confirm(`¿Seguro que deseas eliminar el pesaje del ${registro.fecha}?`)) return;
+                  try {
+                    setIsSubmitting(true);
+                    const res = await authenticatedFetch(`/animales/${animal.id}/pesaje?fecha=${encodeURIComponent(registro.fecha)}`, {
+                      method: 'DELETE'
+                    });
+                    if (res.ok) {
+                      if (onUpdate) onUpdate();
+                    } else {
+                      const error = await res.json();
+                      alert("Error al eliminar: " + (error.error || "Error desconocido"));
+                    }
+                  } catch (err) {
+                    alert("Error: " + err.message);
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                };
+
+                if (isEditing) {
+                  return (
+                    <tr key={idx} className="bg-blue-50/30 transition-colors">
+                      <td className="px-3 py-2">
+                        <input type="date" value={editForm.fecha} onChange={e => setEditForm({...editForm, fecha: e.target.value})} className="w-full p-1 text-[10px] rounded border border-slate-200 outline-none" />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <input type="number" step="0.1" value={editForm.peso} onChange={e => setEditForm({...editForm, peso: e.target.value})} className="w-16 p-1 text-[10px] text-right rounded border border-slate-200 outline-none" />
+                      </td>
+                      <td className="px-3 py-2 text-right text-slate-400">—</td>
+                      <td className="px-3 py-2 text-right text-slate-400">—</td>
+                      <td className="px-3 py-2 text-right space-x-1 whitespace-nowrap">
+                        <button onClick={handleSaveEdit} disabled={isSubmitting} className="p-1 text-green-600 hover:bg-green-100 rounded disabled:opacity-50"><Check size={14}/></button>
+                        <button onClick={handleCancelEdit} disabled={isSubmitting} className="p-1 text-red-600 hover:bg-red-100 rounded disabled:opacity-50"><X size={14}/></button>
+                      </td>
+                    </tr>
+                  );
+                }
 
                 return (
                   <tr key={idx} className="hover:bg-slate-50 transition-colors">
@@ -125,6 +213,10 @@ const AnimalAnalytics = ({ animal }) => {
                       {cambio === null ? '—' : (cambio > 0 ? '+' : '') + cambio.toFixed(1)}
                     </td>
                     <td className="px-3 py-2 text-right text-slate-500">{diasDesdeInicio}</td>
+                    <td className="px-3 py-2 text-right space-x-1 whitespace-nowrap">
+                      <button onClick={handleEditClick} disabled={isSubmitting} className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-all disabled:opacity-50"><Edit3 size={14}/></button>
+                      <button onClick={handleDeleteClick} disabled={isSubmitting} className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all disabled:opacity-50"><Trash2 size={14}/></button>
+                    </td>
                   </tr>
                 );
               })}

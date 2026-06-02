@@ -4,7 +4,9 @@ import {
     getAnimalById,
     registrarAnimal,
     actualizarAnimal,
-    eliminarAnimal
+    eliminarAnimal,
+    editarPesaje,
+    eliminarPesaje
 } from '../controllers/animalController.js';
 import { setTenant } from '../middlewares/setTenant.js';
 import { verificarToken, autorizarRoles } from '../middlewares/authMiddlewares.js';
@@ -25,5 +27,11 @@ router.put('/:id', verificarToken, setTenant, actualizarAnimal);
 
 // 4. Eliminar animal
 router.delete('/:id', verificarToken, setTenant, autorizarRoles('Administrador', 'Propietario'), eliminarAnimal);
+
+// 5. Editar pesaje
+router.put('/:id/pesaje', verificarToken, setTenant, editarPesaje);
+
+// 6. Eliminar pesaje
+router.delete('/:id/pesaje', verificarToken, setTenant, eliminarPesaje);
 
 export default router;

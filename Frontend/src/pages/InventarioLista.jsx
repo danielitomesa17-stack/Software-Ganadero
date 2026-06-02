@@ -703,7 +703,7 @@ const InventarioLista = () => {
 
               <div>
                 <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-2 tracking-wider"><History size={14} /> Análisis Detallado</h3>
-                <AnimalAnalytics animal={viewingAnimal} />
+                <AnimalAnalytics animal={viewingAnimal} onUpdate={async () => { await cargarAnimales(); abrirVerAnimal(viewingAnimal); }} />
               </div>
             </div>
             <div className="flex gap-3 mt-8">

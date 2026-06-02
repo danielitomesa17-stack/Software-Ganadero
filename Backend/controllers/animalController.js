@@ -265,3 +265,107 @@ export const eliminarAnimal = async (req, res) => {
         res.status(500).json({ error: "No se pudo eliminar", detalle: err.message });
     }
 };
+
+// 5. Editar un pesaje del historial
+export const editarPesaje = async (req, res) => {
+    if (!req.user || !req.user.haciendaId) {
+        return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+    }
+
+    const { haciendaId } = req.user;
+    const { id } = req.params;
+    const { fechaOriginal, nuevaFecha, nuevoPeso } = req.body;
+
+    try {
+        const [results] = await db.query(
+            "SELECT historial FROM animales WHERE id = ? AND hacienda_id = ?",
+            [id, haciendaId]
+        );
+        if (results.length === 0) return res.status(404).json({ error: "Animal no encontrado" });
+
+        let historial = [];
+        try {
+            historial = typeof results[0].historial === 'string'
+                ? JSON.parse(results[0].historial || "[]")
+                : (results[0].historial || []);
+        } catch (e) {
+            historial = [];
+        }
+
+        // Buscar el pesaje original
+        const index = historial.findIndex(p => p.fecha === fechaOriginal);
+        if (index === -1) {
+            return res.status(404).json({ error: "Pesaje original no encontrado en el historial" });
+        }
+
+        // Actualizar
+        if (nuevaFecha) historial[index].fecha = nuevaFecha;
+        if (nuevoPeso) historial[index].peso = Number(nuevoPeso);
+
+        // Actualizar peso_actual si es necesario
+        const sorted = [...historial].sort((a, b) => {
+            const [d1, m1, y1] = a.fecha.split('/');
+            const [d2, m2, y2] = b.fecha.split('/');
+            return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+        });
+        const nuevoPesoActual = sorted.length > 0 ? sorted[sorted.length - 1].peso : 0;
+
+        const sql = `UPDATE animales SET historial = ?, peso_actual = ? WHERE id = ? AND hacienda_id = ?`;
+        await db.query(sql, [JSON.stringify(historial), nuevoPesoActual, id, haciendaId]);
+
+        res.json({ message: "Pesaje actualizado correctamente", historial });
+    } catch (err) {
+        res.status(500).json({ error: "Error al actualizar pesaje", detalle: err.message });
+    }
+};
+
+// 6. Eliminar un pesaje del historial
+export const eliminarPesaje = async (req, res) => {
+    if (!req.user || !req.user.haciendaId) {
+        return res.status(401).json({ error: "No autorizado. Falta el identificador de la hacienda." });
+    }
+
+    const { haciendaId } = req.user;
+    const { id } = req.params;
+    const fecha = req.query.fecha || req.body.fecha;
+
+    try {
+        const [results] = await db.query(
+            "SELECT historial FROM animales WHERE id = ? AND hacienda_id = ?",
+            [id, haciendaId]
+        );
+        if (results.length === 0) return res.status(404).json({ error: "Animal no encontrado" });
+
+        let historial = [];
+        try {
+            historial = typeof results[0].historial === 'string'
+                ? JSON.parse(results[0].historial || "[]")
+                : (results[0].historial || []);
+        } catch (e) {
+            historial = [];
+        }
+
+        // Filtrar el pesaje a eliminar
+        const nuevoHistorial = historial.filter(p => p.fecha !== fecha);
+
+        if (historial.length === nuevoHistorial.length) {
+            return res.status(404).json({ error: "Pesaje no encontrado en el historial" });
+        }
+
+        // Actualizar peso_actual si es necesario
+        const sorted = [...nuevoHistorial].sort((a, b) => {
+            const [d1, m1, y1] = a.fecha.split('/');
+            const [d2, m2, y2] = b.fecha.split('/');
+            return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+        });
+        // Si se elimina todo el historial (raro), se queda en 0 o el inicial.
+        const nuevoPesoActual = sorted.length > 0 ? sorted[sorted.length - 1].peso : 0;
+
+        const sql = `UPDATE animales SET historial = ?, peso_actual = ? WHERE id = ? AND hacienda_id = ?`;
+        await db.query(sql, [JSON.stringify(nuevoHistorial), nuevoPesoActual, id, haciendaId]);
+
+        res.json({ message: "Pesaje eliminado correctamente", historial: nuevoHistorial });
+    } catch (err) {
+        res.status(500).json({ error: "Error al eliminar pesaje", detalle: err.message });
+    }
+};
