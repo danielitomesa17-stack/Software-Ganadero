@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { authenticatedFetch } from '../services/api';
 import GestionUsuarios from './GestionUsuarios';
 import BitacoraAuditoria from './BitacoraAuditoria';
 import { toast } from 'sonner';
-import { Building2, Users, ShieldCheck, PlusCircle, LayoutDashboard, Send } from 'lucide-react';
+import { Building2, Users, ShieldCheck, PlusCircle, LayoutDashboard, Send, Loader2 } from 'lucide-react';
 
 const PanelAdmin = ({ token }) => {
   const [activeTab, setActiveTab] = useState('resumen');
   const [form, setForm] = useState({ nombreHacienda: '', nombreAdmin: '', emailAdmin: '', password: '' });
   const [cargando, setCargando] = useState(false);
+  
+  const [stats, setStats] = useState({ haciendas: 0, usuarios: 0, auditoria: 0 });
+  const [cargandoStats, setCargandoStats] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'resumen') {
+      cargarEstadisticas();
+    }
+  }, [activeTab]);
+
+  const cargarEstadisticas = async () => {
+    setCargandoStats(true);
+    try {
+      const res = await authenticatedFetch('/admin/estadisticas');
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error("Error al cargar estadísticas:", err);
+      toast.error('Error', { description: 'No se pudieron cargar las estadísticas del panel.' });
+    } finally {
+      setCargandoStats(false);
+    }
+  };
 
   // Lógica para registrar una nueva hacienda
   const handleSubmit = async (e) => {
@@ -97,24 +122,31 @@ const PanelAdmin = ({ token }) => {
         {activeTab === 'resumen' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-xl font-bold text-slate-800 mb-6">Panel de Control General</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Tarjetas de estadísticas simuladas (Se conectarán luego) */}
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-3xl shadow-lg shadow-emerald-200 text-white">
-                <Building2 className="w-8 h-8 mb-4 opacity-80" />
-                <p className="text-emerald-100 font-medium">Haciendas Activas</p>
-                <h3 className="text-4xl font-black mt-1">--</h3>
+            
+            {cargandoStats ? (
+              <div className="flex flex-col items-center justify-center p-12 text-slate-400">
+                <Loader2 className="animate-spin w-8 h-8 mb-2" />
+                <p>Cargando estadísticas...</p>
               </div>
-              <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white">
-                <Users className="w-8 h-8 mb-4 opacity-80" />
-                <p className="text-blue-100 font-medium">Usuarios Registrados</p>
-                <h3 className="text-4xl font-black mt-1">--</h3>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 rounded-3xl shadow-lg shadow-emerald-200 text-white">
+                  <Building2 className="w-8 h-8 mb-4 opacity-80" />
+                  <p className="text-emerald-100 font-medium">Haciendas Activas</p>
+                  <h3 className="text-4xl font-black mt-1">{stats.haciendas}</h3>
+                </div>
+                <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white">
+                  <Users className="w-8 h-8 mb-4 opacity-80" />
+                  <p className="text-blue-100 font-medium">Usuarios Registrados</p>
+                  <h3 className="text-4xl font-black mt-1">{stats.usuarios}</h3>
+                </div>
+                <div className="bg-gradient-to-br from-violet-500 to-violet-700 p-6 rounded-3xl shadow-lg shadow-violet-200 text-white">
+                  <ShieldCheck className="w-8 h-8 mb-4 opacity-80" />
+                  <p className="text-violet-100 font-medium">Registros de Auditoría</p>
+                  <h3 className="text-4xl font-black mt-1">{stats.auditoria}</h3>
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-violet-500 to-violet-700 p-6 rounded-3xl shadow-lg shadow-violet-200 text-white">
-                <ShieldCheck className="w-8 h-8 mb-4 opacity-80" />
-                <p className="text-violet-100 font-medium">Registros de Auditoría</p>
-                <h3 className="text-4xl font-black mt-1">--</h3>
-              </div>
-            </div>
+            )}
           </div>
         )}
 

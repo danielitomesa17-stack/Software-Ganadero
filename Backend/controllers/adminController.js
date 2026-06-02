@@ -98,3 +98,21 @@ export const actualizarRolUsuario = async (req, res) => {
         res.status(500).json({ error: "Error al actualizar rol" });
     }
 };
+
+// 6. Obtener Estadísticas
+export const obtenerEstadisticas = async (req, res) => {
+    try {
+        const [[{ totalHaciendas }]] = await pool.query("SELECT COUNT(*) as totalHaciendas FROM haciendas");
+        const [[{ totalUsuarios }]] = await pool.query("SELECT COUNT(*) as totalUsuarios FROM usuarios");
+        const [[{ totalAuditoria }]] = await pool.query("SELECT COUNT(*) as totalAuditoria FROM bitacora_auditoria");
+        
+        res.json({
+            haciendas: totalHaciendas,
+            usuarios: totalUsuarios,
+            auditoria: totalAuditoria
+        });
+    } catch (err) {
+        console.error("Error al obtener estadísticas:", err);
+        res.status(500).json({ error: "Error al obtener estadísticas" });
+    }
+};
