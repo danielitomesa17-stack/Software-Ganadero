@@ -45,6 +45,7 @@ const InventarioLista = () => {
   const [fotoPreview, setFotoPreview] = useState(null);
   const [lightboxSrc, setLightboxSrc] = useState(null);
   const [fechaPesaje, setFechaPesaje] = useState(null);
+  const [fechaRegistro, setFechaRegistro] = useState(new Date().toISOString().split('T')[0]);
 
   const estadoInicial = {
     chapeta: '',
@@ -188,6 +189,7 @@ const InventarioLista = () => {
           raza: formData.raza,
           sexo: formData.sexo,
           estado: formData.estado,
+          fecha_ingreso: fechaRegistro,
           foto: fotoBase64
         })
       });
@@ -195,6 +197,7 @@ const InventarioLista = () => {
         await cargarAnimales();
         setIsModalOpen(false);
         setFormData(estadoInicial);
+        setFechaRegistro(new Date().toISOString().split('T')[0]);
       }
     } catch { alert("Error de conexión"); }
   };
@@ -541,6 +544,10 @@ const InventarioLista = () => {
                     <option value="Macho">Macho</option>
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Fecha de Ingreso</label>
+                <input type="date" required className="w-full p-4 bg-slate-50 rounded-xl font-bold text-sm outline-none border border-transparent focus:border-slate-200 transition-all text-slate-700" value={fechaRegistro} onChange={e => setFechaRegistro(e.target.value)} />
               </div>
               <div>
                 <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Lote o Potrero</label>

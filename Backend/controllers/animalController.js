@@ -140,18 +140,20 @@ export const registrarAnimal = async (req, res) => {
     }
 
     const { haciendaId } = req.user;
-    const { caravana_id, peso_inicial, lote, raza, sexo, estado, foto } = req.body;
+    const { caravana_id, peso_inicial, lote, raza, sexo, estado, foto, fecha_ingreso } = req.body;
 
     try {
+        // Usar la fecha de ingreso proporcionada o la fecha actual
+        const fechaParaHistorial = fecha_ingreso || new Date().toISOString().split('T')[0];
         const historialInicial = JSON.stringify([
-            { fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_inicial) }
+            { fecha: fechaParaHistorial, peso: Number(peso_inicial) }
         ]);
 
         const fotoBuffer = foto ? Buffer.from(foto, 'base64') : null;
 
         const sql = `INSERT INTO animales
-            (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto, fecha_ingreso)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         const [result] = await db.query(sql, [
             caravana_id,
@@ -163,7 +165,8 @@ export const registrarAnimal = async (req, res) => {
             estado,
             haciendaId,
             historialInicial,
-            fotoBuffer
+            fotoBuffer,
+            fechaParaHistorial
         ]);
 
         res.json({ message: "Animal registrado con éxito", id: result.insertId });

@@ -22,9 +22,9 @@ class Animal {
    * @param {Object} data - Campos del animal, incluye hacienda_id.
    */
   static async create(data) {
-    const { caravana_id, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto } = data;
-    const sql = `INSERT INTO animales (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    const [result] = await pool.query(sql, [caravana_id, peso_inicial, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto]);
+    const { caravana_id, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto, fecha_ingreso } = data;
+    const sql = `INSERT INTO animales (caravana_id, peso_inicial, peso_actual, lote, raza, sexo, estado, hacienda_id, historial, foto, fecha_ingreso) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    const [result] = await pool.query(sql, [caravana_id, peso_inicial, peso_inicial, lote, raza, sexo, estado, hacienda_id, historial, foto, fecha_ingreso]);
     return result.insertId;
   }
 
