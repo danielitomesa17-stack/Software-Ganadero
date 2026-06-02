@@ -3,7 +3,7 @@ import { Menu, Bell, UserCircle } from 'lucide-react';
 
 const Navbar = ({ toggleSidebar }) => {
   return (
-    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 lg:px-6 z-10">
+    <header className="h-16 bg-white shadow-sm flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
       
       <div className="flex items-center gap-4">
         {/* Botón de Menú (Hamburguesa): Solo visible en pantallas pequeñas (md:hidden) */}

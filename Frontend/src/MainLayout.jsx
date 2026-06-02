@@ -13,7 +13,7 @@ const MainLayout = () => {
         <Navbar />
         
         {/* ÁREA DE CONTENIDO DINÁMICO */}
-        <main className="flex-1 overflow-y-auto p-4">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-12">
           {/* 2. ESTA ES LA PIEZA CLAVE QUE CONECTA TODO */}
           <Outlet /> 
         </main>

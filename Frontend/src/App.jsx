@@ -28,8 +28,8 @@
     }
 
     return (
-      <div className="p-6 bg-slate-50 min-h-screen font-sans pb-10">
-        <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+      <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen font-sans pb-10">
+        <div className="max-w-7xl mx-auto bg-white rounded-3xl shadow-xl p-4 sm:p-6 lg:p-8 border border-slate-100">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-6 mb-6">
             <div>

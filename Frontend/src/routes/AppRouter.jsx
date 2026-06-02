@@ -21,8 +21,73 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      {/* SIDEBAR */}
-      <aside className={`${sidebarOpen ? 'w-72 p-6' : 'w-24 py-6 px-3'} bg-[#0F172A] flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl h-screen`}>
+      {/* MOBILE DRAWER OVERLAY - Only visible when sidebar is open on mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 md:hidden z-40 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* MOBILE SIDEBAR DRAWER - Fixed overlay on small screens */}
+      <aside className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed left-0 top-0 bottom-0 md:hidden w-72 p-6 bg-[#0F172A] flex flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl h-screen`}>
+        <div className="flex items-center gap-4 px-2 mb-12 shrink-0">
+          <div className="min-w-[45px] h-[45px] bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg font-black text-xl shrink-0">
+            {sesion.nombre_hacienda?.substring(0, 2).toUpperCase() || 'HD'}
+          </div>
+          <div className="flex flex-col overflow-hidden">
+            <span className="text-white font-black text-xl tracking-tighter uppercase truncate">Hacienda</span>
+            <span className="text-green-400 text-[10px] font-bold tracking-[0.2em] uppercase truncate">{sesion.nombre_hacienda}</span>
+          </div>
+        </div>
+
+        <nav className="flex-1 space-y-3 overflow-y-auto overflow-x-hidden custom-scrollbar pr-2 mb-4">
+          <Link to="/app/inventario" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/inventario') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <LayoutDashboard size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Inventario</span>
+          </Link>
+
+          {sesion.user?.rol === 'SuperAdmin' && (
+            <Link to="/app/admin" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/admin') ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+              <Settings size={22} className="shrink-0" />
+              <span className="font-bold text-xs uppercase tracking-widest truncate">Admin Panel</span>
+            </Link>
+          )}
+
+          <Link to="/app/reportes" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/reportes') ? 'bg-rose-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BarChart3 size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Análisis</span>
+          </Link>
+
+          <Link to="/app/MedicamentosInventario" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/MedicamentosInventario') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Pill size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Farmacia</span>
+          </Link>
+
+          <Link to="/app/gastos" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/gastos') ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Wallet size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Gastos</span>
+          </Link>
+
+          <Link to="/app/ProduccionSistemas" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/ProduccionSistemas') ? 'bg-green-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Scale size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Producción</span>
+          </Link>
+
+          <Link to="/app/SanidadSistemas" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/SanidadSistemas') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <Activity size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Sanidad</span>
+          </Link>
+        </nav>
+
+        <button onClick={onLogout} className="flex items-center gap-4 px-4 py-4 text-slate-500 hover:text-red-400 mt-auto border-t border-slate-800 pt-6 transition-colors w-full shrink-0">
+          <LogOut size={22} className="shrink-0" />
+          <span className="font-bold text-xs uppercase tracking-widest truncate">Cerrar Sesión</span>
+        </button>
+      </aside>
+
+      {/* DESKTOP SIDEBAR - Hidden on mobile/tablet, visible on md+ */}
+      <aside className={`${sidebarOpen ? 'w-72 p-6' : 'w-24 py-6 px-3'} hidden md:flex bg-[#0F172A] flex-col transition-all duration-500 ease-in-out z-50 shadow-2xl h-screen`}>
         <div className={`flex items-center ${sidebarOpen ? 'gap-4 px-2' : 'justify-center'} mb-12 shrink-0`}>
           <div className="min-w-[45px] h-[45px] bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center text-white shadow-lg font-black text-xl shrink-0">
             {sesion.nombre_hacienda?.substring(0, 2).toUpperCase() || 'HD'}
@@ -83,11 +148,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
 
       {/* ÁREA PRINCIPAL */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/80 border-b border-slate-200 px-8 flex justify-between items-center sticky top-0 z-40">
+        <header className="h-20 bg-white/80 border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex justify-between items-center sticky top-0 z-40">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-3 hover:bg-slate-100 rounded-2xl text-slate-600"><Menu size={24} /></button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 lg:p-12">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-12">
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route path="inventario" element={<InventarioLista />} />
