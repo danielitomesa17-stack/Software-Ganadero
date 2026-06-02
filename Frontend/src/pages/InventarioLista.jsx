@@ -6,7 +6,7 @@ import { authenticatedFetch } from '../services/api';
 import GraficoGananciaAnimal from '../components/GraficoGananciaAnimal';
 import AnimalAnalytics from '../components/AnimalAnalytics';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // Helper: convierte la foto (Buffer base64 o data-url) a un data-url válido
 const getImageSrc = (foto) => {
@@ -301,7 +301,7 @@ const InventarioLista = () => {
     }
 
     yPosition += 12;
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Campo', 'Valor']],
       body: infoData,
       startY: yPosition,
@@ -338,7 +338,7 @@ const InventarioLista = () => {
         return [reg.fecha, `${reg.peso} kg`, cambio === '—' ? '—' : `${cambio > 0 ? '+' : ''}${cambio.toFixed(1)} kg`];
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         head: [['Fecha', 'Peso', 'Cambio']],
         body: historialData,
         startY: yPosition + 8,
