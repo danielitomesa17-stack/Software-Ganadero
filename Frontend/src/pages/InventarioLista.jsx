@@ -521,7 +521,7 @@ const InventarioLista = () => {
       {/* MODAL REGISTRO (ENTRADA ANIMAL) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-xl border border-slate-100">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-black mb-6 uppercase tracking-tight text-slate-900">Entrada Animal</h2>
             <form onSubmit={handleGuardar} className="space-y-4">
               <div>
