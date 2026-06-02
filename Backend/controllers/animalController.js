@@ -142,7 +142,7 @@ export const actualizarAnimal = async (req, res) => {
 
     const { haciendaId } = req.user;
     const { id } = req.params;
-    const { peso_actual, estado, lote, foto } = req.body;
+    const { peso_actual, fecha_pesaje, estado, lote, foto } = req.body;
 
     try {
         const [results] = await db.query(
@@ -160,7 +160,8 @@ export const actualizarAnimal = async (req, res) => {
             historial = [];
         }
 
-        historial.push({ fecha: new Date().toLocaleDateString('es-CO'), peso: Number(peso_actual) });
+        const fecha = fecha_pesaje || new Date().toLocaleDateString('es-CO');
+        historial.push({ fecha: fecha, peso: Number(peso_actual) });
 
         const updateFields = [];
         const updateValues = [];

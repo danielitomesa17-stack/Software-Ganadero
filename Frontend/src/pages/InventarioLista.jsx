@@ -40,6 +40,7 @@ const InventarioLista = () => {
   const [fotoEdit, setFotoEdit] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
   const [lightboxSrc, setLightboxSrc] = useState(null);
+  const [fechaPesaje, setFechaPesaje] = useState(null);
 
   const estadoInicial = {
     chapeta: '',
@@ -110,6 +111,8 @@ const InventarioLista = () => {
   const abrirEditarAnimal = async (animal) => {
     setFotoEdit(null);
     setFotoPreview(null);
+    const today = new Date().toISOString().split('T')[0];
+    setFechaPesaje(today);
     try {
       const res = await authenticatedFetch(`/animales/${animal.id}`);
       if (res.ok) {
@@ -194,6 +197,7 @@ const InventarioLista = () => {
   const handleActualizar = async (e) => {
     e.preventDefault();
     if (!editingAnimal.pesoActual) { alert("El peso es obligatorio"); return; }
+    if (!fechaPesaje) { alert("La fecha del pesaje es obligatoria"); return; }
     try {
       let fotoBase64 = undefined; // undefined = no cambiar foto
 
@@ -210,10 +214,15 @@ const InventarioLista = () => {
         fotoBase64 = f.startsWith('data:') ? f.split(',')[1] : f;
       }
 
+      // Convertir fecha de formato YYYY-MM-DD a DD/MM/YYYY (formato es-CO)
+      const [year, month, day] = fechaPesaje.split('-');
+      const fechaFormato = `${day}/${month}/${year}`;
+
       const res = await authenticatedFetch(`/animales/${editingAnimal.id}`, {
         method: 'PUT',
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
+          fecha_pesaje: fechaFormato,
           estado: editingAnimal.estado,
           lote: editingAnimal.potrero,
           foto: fotoBase64
@@ -225,6 +234,7 @@ const InventarioLista = () => {
         setEditingAnimal(null);
         setFotoEdit(null);
         setFotoPreview(null);
+        setFechaPesaje(null);
       } else {
         const error = await res.json();
         alert("Error al actualizar: " + (error.error || "Error desconocido"));
@@ -513,6 +523,10 @@ const InventarioLista = () => {
                 <label className="block text-[9px] font-black text-green-600 uppercase mb-1">Nuevo Peso Registrado (KG)</label>
                 <input type="number" step="0.1" autoFocus className="w-full p-4 bg-green-50/50 rounded-xl font-black border-2 border-green-500 text-2xl outline-none text-green-900 text-center" value={editingAnimal.pesoActual} onChange={e => setEditingAnimal({...editingAnimal, pesoActual: e.target.value})} />
               </div>
+              <div>
+                <label className="block text-[9px] font-black text-blue-600 uppercase mb-1">Fecha del Pesaje</label>
+                <input type="date" className="w-full p-4 bg-blue-50/50 rounded-xl font-black border-2 border-blue-500 outline-none text-blue-900" value={fechaPesaje} onChange={e => setFechaPesaje(e.target.value)} />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Estado Sanitario</label>
@@ -527,7 +541,7 @@ const InventarioLista = () => {
                 </div>
               </div>
               <button type="submit" className="w-full py-4 bg-green-600 text-white rounded-xl font-black uppercase text-xs tracking-wider mt-2 hover:bg-green-700 transition-all shadow-md shadow-green-900/10">Actualizar Pesaje</button>
-              <button type="button" onClick={() => { setEditingAnimal(null); setFotoEdit(null); setFotoPreview(null); }} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
+              <button type="button" onClick={() => { setEditingAnimal(null); setFotoEdit(null); setFotoPreview(null); setFechaPesaje(null); }} className="w-full text-slate-400 font-bold text-[10px] uppercase text-center pt-1">Cerrar</button>
             </form>
           </div>
         </div>
