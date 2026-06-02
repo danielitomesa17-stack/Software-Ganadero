@@ -1,6 +1,7 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
+import { parseDateString } from '../utils/dateUtils';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
@@ -15,9 +16,7 @@ const GraficoGananciaAnimal = ({ historial, pesoObjetivo, chapeta }) => {
 
   // Ordenar historial cronológicamente
   const sorted = [...historial].sort((a, b) => {
-    const [d1, m1, y1] = a.fecha.split('/');
-    const [d2, m2, y2] = b.fecha.split('/');
-    return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+    return parseDateString(a.fecha) - parseDateString(b.fecha);
   });
 
   // Preparar datos para la gráfica

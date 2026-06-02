@@ -7,6 +7,7 @@ import GraficoGananciaAnimal from '../components/GraficoGananciaAnimal';
 import AnimalAnalytics from '../components/AnimalAnalytics';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { parseDateString } from '../utils/dateUtils';
 
 // Helper: convierte la foto (Buffer base64 o data-url) a un data-url válido
 const getImageSrc = (foto) => {
@@ -328,9 +329,7 @@ const InventarioLista = () => {
       doc.text('Historial de Pesajes', 15, yPosition);
 
       const sorted = [...animal.historial].sort((a, b) => {
-        const [d1, m1, y1] = a.fecha.split('/');
-        const [d2, m2, y2] = b.fecha.split('/');
-        return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+        return parseDateString(a.fecha) - parseDateString(b.fecha);
       });
 
       const historialData = sorted.map((reg, idx) => {

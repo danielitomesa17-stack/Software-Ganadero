@@ -40,22 +40,33 @@ const fotoToDataUrl = (foto) => {
 const calcularGDP = (historial) => {
     if (!historial || historial.length < 2) return null;
 
+    const parseDate = (dateStr) => {
+        if (!dateStr) return new Date();
+        if (dateStr.includes('/')) {
+            const parts = dateStr.split('/');
+            if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        if (dateStr.includes('-')) {
+            const parts = dateStr.split('-');
+            if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return new Date(dateStr);
+    };
+
     const sorted = [...historial].sort((a, b) => {
-        const [d1, m1, y1] = a.fecha.split('/');
-        const [d2, m2, y2] = b.fecha.split('/');
-        return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+        return parseDate(a.fecha) - parseDate(b.fecha);
     });
 
     const primero = sorted[0];
     const ultimo = sorted[sorted.length - 1];
-    const [d1, m1, y1] = primero.fecha.split('/');
-    const [d2, m2, y2] = ultimo.fecha.split('/');
 
-    const fecha1 = new Date(y1, m1 - 1, d1);
-    const fecha2 = new Date(y2, m2 - 1, d2);
+    const fecha1 = parseDate(primero.fecha);
+    const fecha2 = parseDate(ultimo.fecha);
     const dias = Math.floor((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
 
-    if (dias === 0) return null;
+    if (dias <= 0) return null;
 
     const gdp = ((ultimo.peso - primero.peso) / dias).toFixed(2);
     return Number(gdp);
@@ -303,11 +314,21 @@ export const editarPesaje = async (req, res) => {
         if (nuevoPeso) historial[index].peso = Number(nuevoPeso);
 
         // Actualizar peso_actual si es necesario
-        const sorted = [...historial].sort((a, b) => {
-            const [d1, m1, y1] = a.fecha.split('/');
-            const [d2, m2, y2] = b.fecha.split('/');
-            return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
-        });
+        const parseDate = (dateStr) => {
+            if (!dateStr) return new Date();
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(dateStr);
+        };
+        const sorted = [...historial].sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
         const nuevoPesoActual = sorted.length > 0 ? sorted[sorted.length - 1].peso : 0;
 
         const sql = `UPDATE animales SET historial = ?, peso_actual = ? WHERE id = ? AND hacienda_id = ?`;
@@ -353,11 +374,21 @@ export const eliminarPesaje = async (req, res) => {
         }
 
         // Actualizar peso_actual si es necesario
-        const sorted = [...nuevoHistorial].sort((a, b) => {
-            const [d1, m1, y1] = a.fecha.split('/');
-            const [d2, m2, y2] = b.fecha.split('/');
-            return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
-        });
+        const parseDate = (dateStr) => {
+            if (!dateStr) return new Date();
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            if (dateStr.includes('-')) {
+                const parts = dateStr.split('-');
+                if (parts[0].length === 4) return new Date(parts[0], parts[1] - 1, parts[2]);
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(dateStr);
+        };
+        const sorted = [...nuevoHistorial].sort((a, b) => parseDate(a.fecha) - parseDate(b.fecha));
         // Si se elimina todo el historial (raro), se queda en 0 o el inicial.
         const nuevoPesoActual = sorted.length > 0 ? sorted[sorted.length - 1].peso : 0;
 

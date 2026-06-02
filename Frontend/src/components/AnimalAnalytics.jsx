@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { TrendingUp, Edit3, Trash2, X, Check } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
+import { parseDateString, formatToYYYYMMDD, formatToDDMMYYYY } from '../utils/dateUtils';
 
 const AnimalAnalytics = ({ animal, onUpdate }) => {
   const [editingIndex, setEditingIndex] = useState(null);
@@ -17,18 +18,14 @@ const AnimalAnalytics = ({ animal, onUpdate }) => {
   // Calcular métricas
   const metrics = useMemo(() => {
     const sorted = [...animal.historial].sort((a, b) => {
-      const [d1, m1, y1] = a.fecha.split('/');
-      const [d2, m2, y2] = b.fecha.split('/');
-      return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+      return parseDateString(a.fecha) - parseDateString(b.fecha);
     });
 
     const primero = sorted[0];
     const ultimo = sorted[sorted.length - 1];
-    const [d1, m1, y1] = primero.fecha.split('/');
-    const [d2, m2, y2] = ultimo.fecha.split('/');
 
-    const fecha1 = new Date(y1, m1 - 1, d1);
-    const fecha2 = new Date(y2, m2 - 1, d2);
+    const fecha1 = parseDateString(primero.fecha);
+    const fecha2 = parseDateString(ultimo.fecha);
     const dias = Math.floor((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
     const gananciaTotal = ultimo.peso - primero.peso;
     const gdp = dias > 0 ? (gananciaTotal / dias).toFixed(2) : null;
@@ -112,19 +109,16 @@ const AnimalAnalytics = ({ animal, onUpdate }) => {
             <tbody className="divide-y divide-slate-100">
               {metrics.sorted.map((registro, idx) => {
                 const cambio = idx > 0 ? registro.peso - metrics.sorted[idx - 1].peso : null;
-                const [d1, m1, y1] = metrics.sorted[0].fecha.split('/');
-                const [d2, m2, y2] = registro.fecha.split('/');
-                const diasDesdeInicio = Math.floor(
-                  (new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / (1000 * 60 * 60 * 24)
-                );
+                const d1 = parseDateString(metrics.sorted[0].fecha);
+                const d2 = parseDateString(registro.fecha);
+                const diasDesdeInicio = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
                 
                 const isEditing = editingIndex === idx;
 
                 const handleEditClick = () => {
                   setEditingIndex(idx);
-                  // convertir fecha DD/MM/YYYY a YYYY-MM-DD para el input type date
-                  const [d, m, y] = registro.fecha.split('/');
-                  setEditForm({ fecha: `${y}-${m}-${d}`, peso: registro.peso });
+                  // convertir a YYYY-MM-DD para el input type date
+                  setEditForm({ fecha: formatToYYYYMMDD(registro.fecha), peso: registro.peso });
                 };
 
                 const handleCancelEdit = () => {
@@ -136,8 +130,7 @@ const AnimalAnalytics = ({ animal, onUpdate }) => {
                   if (!editForm.fecha || !editForm.peso) return;
                   try {
                     setIsSubmitting(true);
-                    const [y, m, d] = editForm.fecha.split('-');
-                    const nuevaFecha = `${d}/${m}/${y}`;
+                    const nuevaFecha = formatToDDMMYYYY(editForm.fecha);
                     
                     const res = await authenticatedFetch(`/animales/${animal.id}/pesaje`, {
                       method: 'PUT',

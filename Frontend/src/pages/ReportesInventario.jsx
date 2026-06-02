@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Download, Filter, BarChart3 } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
+import { parseDateString } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -45,15 +46,13 @@ const ReportesInventario = () => {
       let gdp = null;
       if (a.historial && a.historial.length >= 2) {
         const sorted = [...a.historial].sort((x, y) => {
-          const [d1, m1, y1] = x.fecha.split('/');
-          const [d2, m2, y2] = y.fecha.split('/');
-          return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+          return parseDateString(x.fecha) - parseDateString(y.fecha);
         });
         const primero = sorted[0];
         const ultimo = sorted[sorted.length - 1];
-        const [d1, m1, y1] = primero.fecha.split('/');
-        const [d2, m2, y2] = ultimo.fecha.split('/');
-        const dias = Math.floor((new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / (1000 * 60 * 60 * 24));
+        const d1 = parseDateString(primero.fecha);
+        const d2 = parseDateString(ultimo.fecha);
+        const dias = Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
         if (dias > 0) gdp = ((ultimo.peso - primero.peso) / dias).toFixed(2);
       }
 
