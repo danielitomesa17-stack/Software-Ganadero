@@ -1,8 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { 
-  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera 
+import {
+  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp
 } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
+import GraficoGananciaAnimal from '../components/GraficoGananciaAnimal';
+import AnimalAnalytics from '../components/AnimalAnalytics';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 // Helper: convierte la foto (Buffer base64 o data-url) a un data-url válido
 const getImageSrc = (foto) => {
@@ -94,6 +98,7 @@ const InventarioLista = () => {
           raza: d.raza,
           pesoInicial: Number(d.peso_inicial),
           pesoActual: Number(d.peso_actual),
+          pesoObjetivo: d.peso_objetivo ? Number(d.peso_objetivo) : null,
           potrero: d.lote,
           sexo: d.sexo,
           estado: d.estado,
@@ -123,6 +128,7 @@ const InventarioLista = () => {
           raza: d.raza,
           pesoInicial: Number(d.peso_inicial),
           pesoActual: Number(d.peso_actual),
+          pesoObjetivo: d.peso_objetivo ? Number(d.peso_objetivo) : null,
           potrero: d.lote,
           sexo: d.sexo,
           estado: d.estado,
@@ -223,6 +229,7 @@ const InventarioLista = () => {
         body: JSON.stringify({
           peso_actual: Number(editingAnimal.pesoActual),
           fecha_pesaje: fechaFormato,
+          peso_objetivo: editingAnimal.pesoObjetivo,
           estado: editingAnimal.estado,
           lote: editingAnimal.potrero,
           foto: fotoBase64
@@ -250,6 +257,99 @@ const InventarioLista = () => {
       await authenticatedFetch(`/animales/${id}`, { method: 'DELETE' });
       await cargarAnimales();
     } catch { alert("Error al eliminar"); }
+  };
+
+  const descargarReportePDF = (animal) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    let yPosition = 15;
+
+    // Portada
+    doc.setFontSize(24);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Reporte de Animal', pageWidth / 2, yPosition, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setTextColor(100, 116, 139);
+
+    yPosition += 12;
+    const hoy = new Date().toLocaleDateString('es-CO');
+    doc.text(`Fecha: ${hoy}`, pageWidth / 2, yPosition, { align: 'center' });
+
+    // Datos principales
+    yPosition += 20;
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Bovino: ${animal.chapeta}`, 15, yPosition);
+
+    const infoData = [
+      ['Raza', animal.raza],
+      ['Sexo', animal.sexo],
+      ['Lote/Potrero', animal.potrero],
+      ['Estado Sanitario', animal.estado],
+      ['Peso Inicial', `${animal.pesoInicial} kg`],
+      ['Peso Actual', `${animal.pesoActual} kg`],
+      ['Ganancia Total', `${(animal.pesoActual - animal.pesoInicial).toFixed(1)} kg`],
+    ];
+
+    if (animal.pesoObjetivo) {
+      infoData.push(['Peso Objetivo', `${animal.pesoObjetivo} kg`]);
+      infoData.push(['Progreso', `${((animal.pesoActual / animal.pesoObjetivo) * 100).toFixed(1)}%`]);
+    }
+
+    yPosition += 12;
+    doc.autoTable({
+      head: [['Campo', 'Valor']],
+      body: infoData,
+      startY: yPosition,
+      margin: 15,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+      bodyStyles: { textColor: 51, fontStyle: 'normal' },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 'auto' } }
+    });
+
+    // Historial de pesajes
+    if (animal.historial && animal.historial.length > 0) {
+      const newY = doc.lastAutoTable.finalY + 15;
+      yPosition = newY < pageHeight - 40 ? newY : pageHeight;
+
+      if (yPosition > pageHeight - 40) {
+        doc.addPage();
+        yPosition = 15;
+      }
+
+      doc.setFontSize(12);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Historial de Pesajes', 15, yPosition);
+
+      const sorted = [...animal.historial].sort((a, b) => {
+        const [d1, m1, y1] = a.fecha.split('/');
+        const [d2, m2, y2] = b.fecha.split('/');
+        return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+      });
+
+      const historialData = sorted.map((reg, idx) => {
+        const cambio = idx > 0 ? reg.peso - sorted[idx - 1].peso : '—';
+        return [reg.fecha, `${reg.peso} kg`, cambio === '—' ? '—' : `${cambio > 0 ? '+' : ''}${cambio.toFixed(1)} kg`];
+      });
+
+      doc.autoTable({
+        head: [['Fecha', 'Peso', 'Cambio']],
+        body: historialData,
+        startY: yPosition + 8,
+        margin: 15,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold' },
+        bodyStyles: { textColor: 51 },
+        alternateRowStyles: { fillColor: [248, 250, 252] }
+      });
+    }
+
+    // Descargar PDF
+    const nombreArchivo = `Reporte_Animal_${animal.chapeta}_${hoy.replace(/\//g, '-')}.pdf`;
+    doc.save(nombreArchivo);
   };
 
   const filtrados = useMemo(() => {
@@ -527,6 +627,10 @@ const InventarioLista = () => {
                 <label className="block text-[9px] font-black text-blue-600 uppercase mb-1">Fecha del Pesaje</label>
                 <input type="date" className="w-full p-4 bg-blue-50/50 rounded-xl font-black border-2 border-blue-500 outline-none text-blue-900" value={fechaPesaje} onChange={e => setFechaPesaje(e.target.value)} />
               </div>
+              <div>
+                <label className="block text-[9px] font-black text-purple-600 uppercase mb-1">Peso Objetivo (KG)</label>
+                <input type="number" step="0.1" className="w-full p-4 bg-purple-50/50 rounded-xl font-bold text-xs outline-none border border-transparent focus:border-purple-300 text-purple-900" placeholder="Ej: 450" value={editingAnimal.pesoObjetivo || ''} onChange={e => setEditingAnimal({...editingAnimal, pesoObjetivo: e.target.value ? Number(e.target.value) : null})} />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Estado Sanitario</label>
@@ -584,30 +688,25 @@ const InventarioLista = () => {
               <div className="bg-green-50/50 p-4 rounded-xl border border-green-100/50"><span className="block text-[9px] font-black text-green-400 uppercase mb-0.5">P. Actual</span><span className="text-sm font-black text-green-700">{viewingAnimal.pesoActual} KG</span></div>
             </div>
 
-            <div className="border-t border-slate-100 pt-6">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 mb-4 flex items-center gap-2 tracking-wider"><History size={14} /> Historial Cronológico de Pesajes</h3>
-              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                {viewingAnimal.historial?.length > 0 ? (
-                  viewingAnimal.historial.slice().reverse().map((reg, i) => (
-                    <div key={i} className="flex justify-between items-center bg-slate-50/60 p-3.5 rounded-xl border border-slate-100 text-xs">
-                      <div>
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-tight">Fecha del Evento</p>
-                        <p className="font-bold text-slate-700">{reg.fecha}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-tight">Peso Evaluado</p>
-                        <p className="font-black text-slate-900 text-sm">{reg.peso} KG</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center py-6 text-[10px] font-bold text-slate-400 italic bg-slate-50/50 rounded-xl">
-                    Este animal mantiene únicamente su pesaje de entrada inicial.
-                  </p>
-                )}
+            <div className="border-t border-slate-100 pt-6 space-y-6">
+              <div>
+                <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-2 tracking-wider"><TrendingUp size={14} /> Gráfica de Crecimiento</h3>
+                <GraficoGananciaAnimal historial={viewingAnimal.historial} pesoObjetivo={viewingAnimal.pesoObjetivo} chapeta={viewingAnimal.chapeta} />
+              </div>
+
+              <div>
+                <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3 flex items-center gap-2 tracking-wider"><History size={14} /> Análisis Detallado</h3>
+                <AnimalAnalytics animal={viewingAnimal} />
               </div>
             </div>
-            <button onClick={() => setViewingAnimal(null)} className="w-full mt-8 py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all hover:bg-slate-800">Cerrar Ficha</button>
+            <div className="flex gap-3 mt-8">
+              <button onClick={() => descargarReportePDF(viewingAnimal)} className="flex-1 py-4 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all hover:bg-blue-700 shadow-md">
+                📥 Descargar Reporte PDF
+              </button>
+              <button onClick={() => setViewingAnimal(null)} className="flex-1 py-4 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-wider transition-all hover:bg-slate-800">
+                Cerrar Ficha
+              </button>
+            </div>
           </div>
         </div>
       )}

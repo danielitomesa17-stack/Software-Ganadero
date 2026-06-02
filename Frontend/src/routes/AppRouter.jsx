@@ -11,7 +11,8 @@ import InventarioLista from '../pages/InventarioLista';
 import ProduccionSistemas from '../pages/ProduccionSistemas'; 
 import SanidadSistemas from '../pages/SanidadSistemas';
 import MedicamentosInventario from '../pages/MedicamentosInventario'; 
-import ReportesSistemas from '../pages/ReportesSistemas'; 
+import ReportesSistemas from '../pages/ReportesSistemas';
+import ReportesInventario from '../pages/ReportesInventario';
 import GastosSistemas from '../pages/GastosSistemas';
 import PanelAdmin from '../pages/PanelAdmin'; // Módulo independiente
 
@@ -57,6 +58,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
           <Link to="/app/reportes" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/reportes') ? 'bg-rose-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
             <BarChart3 size={22} className="shrink-0" />
             <span className="font-bold text-xs uppercase tracking-widest truncate">Análisis</span>
+          </Link>
+
+          <Link to="/app/reportes-inventario" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/reportes-inventario') ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BarChart3 size={22} className="shrink-0" />
+            <span className="font-bold text-xs uppercase tracking-widest truncate">Reportes Inventario</span>
           </Link>
 
           <Link to="/app/MedicamentosInventario" onClick={() => setSidebarOpen(false)} className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all ${isActive('/app/MedicamentosInventario') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
@@ -119,6 +125,11 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest truncate">Análisis</span>}
           </Link>
 
+          <Link to="/app/reportes-inventario" className={`flex items-center ${sidebarOpen ? 'gap-4 px-4' : 'justify-center'} py-4 rounded-2xl transition-all ${isActive('/app/reportes-inventario') ? 'bg-cyan-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
+            <BarChart3 size={22} className="shrink-0" />
+            {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest truncate">Reportes Inventario</span>}
+          </Link>
+
           <Link to="/app/MedicamentosInventario" className={`flex items-center ${sidebarOpen ? 'gap-4 px-4' : 'justify-center'} py-4 rounded-2xl transition-all ${isActive('/app/MedicamentosInventario') ? 'bg-amber-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}>
             <Pill size={22} className="shrink-0" />
             {sidebarOpen && <span className="font-bold text-xs uppercase tracking-widest truncate">Farmacia</span>}
@@ -157,6 +168,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
             <Routes>
               <Route path="inventario" element={<InventarioLista />} />
               <Route path="reportes" element={<ReportesSistemas />} />
+              <Route path="reportes-inventario" element={<ReportesInventario />} />
               <Route path="ProduccionSistemas" element={<ProduccionSistemas />} />
               <Route path="SanidadSistemas" element={<SanidadSistemas />} />
               <Route path="MedicamentosInventario" element={<MedicamentosInventario />} />

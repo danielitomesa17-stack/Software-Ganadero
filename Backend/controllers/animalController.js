@@ -1,9 +1,5 @@
 import db from '../config/db.js';
 
-/**
- * Convierte el campo foto (LONGBLOB) a un data-URL válido.
- * mysql2 puede devolver el BLOB como Buffer, Uint8Array, o String.
- */
 const fotoToDataUrl = (foto) => {
     if (!foto) return null;
 
@@ -40,6 +36,31 @@ const fotoToDataUrl = (foto) => {
     return null;
 };
 
+// Helper: Calcula Ganancia Diaria Promedio (GDP) a partir del historial
+const calcularGDP = (historial) => {
+    if (!historial || historial.length < 2) return null;
+
+    const sorted = [...historial].sort((a, b) => {
+        const [d1, m1, y1] = a.fecha.split('/');
+        const [d2, m2, y2] = b.fecha.split('/');
+        return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+    });
+
+    const primero = sorted[0];
+    const ultimo = sorted[sorted.length - 1];
+    const [d1, m1, y1] = primero.fecha.split('/');
+    const [d2, m2, y2] = ultimo.fecha.split('/');
+
+    const fecha1 = new Date(y1, m1 - 1, d1);
+    const fecha2 = new Date(y2, m2 - 1, d2);
+    const dias = Math.floor((fecha2 - fecha1) / (1000 * 60 * 60 * 24));
+
+    if (dias === 0) return null;
+
+    const gdp = ((ultimo.peso - primero.peso) / dias).toFixed(2);
+    return Number(gdp);
+};
+
 // 1.5 Obtener un animal específico por ID
 export const getAnimalById = async (req, res) => {
     try {
@@ -61,9 +82,19 @@ export const getAnimalById = async (req, res) => {
 
         const animal = results[0];
         const fotoUrl = fotoToDataUrl(animal.foto);
+        const historial = typeof animal.historial === 'string'
+            ? JSON.parse(animal.historial || "[]")
+            : (animal.historial || []);
+        const gdp = calcularGDP(historial);
+
         console.log(`[getAnimalById] id=${id} foto tipo=${typeof animal.foto} isBuffer=${Buffer.isBuffer(animal.foto)} fotoUrl=${fotoUrl ? 'OK (' + fotoUrl.length + ' chars)' : 'null'}`);
 
-        res.json({ ...animal, foto: fotoUrl });
+        res.json({
+            ...animal,
+            foto: fotoUrl,
+            gdp: gdp,
+            historial: historial
+        });
     } catch (err) {
         res.status(500).json({ error: "Error al obtener animal", detalle: err.message });
     }
@@ -83,10 +114,17 @@ export const getAnimales = async (req, res) => {
             [haciendaId]
         );
 
-        const animalesConFoto = results.map(animal => ({
-            ...animal,
-            foto: fotoToDataUrl(animal.foto)
-        }));
+        const animalesConFoto = results.map(animal => {
+            const historial = typeof animal.historial === 'string'
+                ? JSON.parse(animal.historial || "[]")
+                : (animal.historial || []);
+            return {
+                ...animal,
+                foto: fotoToDataUrl(animal.foto),
+                gdp: calcularGDP(historial),
+                historial: historial
+            };
+        });
 
         res.json(animalesConFoto);
     } catch (err) {
@@ -142,7 +180,7 @@ export const actualizarAnimal = async (req, res) => {
 
     const { haciendaId } = req.user;
     const { id } = req.params;
-    const { peso_actual, fecha_pesaje, estado, lote, foto } = req.body;
+    const { peso_actual, fecha_pesaje, estado, lote, foto, peso_objetivo } = req.body;
 
     try {
         const [results] = await db.query(
@@ -181,6 +219,10 @@ export const actualizarAnimal = async (req, res) => {
         if (foto !== undefined) {
             updateFields.push("foto = ?");
             updateValues.push(foto ? Buffer.from(foto, 'base64') : null);
+        }
+        if (peso_objetivo !== undefined) {
+            updateFields.push("peso_objetivo = ?");
+            updateValues.push(peso_objetivo ? Number(peso_objetivo) : null);
         }
 
         updateFields.push("historial = ?");
