@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp
+  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
 import GraficoGananciaAnimal from '../components/GraficoGananciaAnimal';
@@ -38,6 +38,8 @@ const InventarioLista = () => {
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnimal, setEditingAnimal] = useState(null);
   const [viewingAnimal, setViewingAnimal] = useState(null);
@@ -361,6 +363,16 @@ const InventarioLista = () => {
     );
   }, [animales, busqueda]);
 
+  const totalPages = Math.ceil(filtrados.length / itemsPerPage);
+  const currentAnimales = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filtrados.slice(start, start + itemsPerPage);
+  }, [filtrados, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda]);
+
   // Miniatura clicable
   const Thumbnail = ({ src }) => {
     const imgSrc = getImageSrc(src);
@@ -429,7 +441,7 @@ const InventarioLista = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filtrados.map(a => (
+                {currentAnimales.map(a => (
                   <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-5 py-4">
                       <Thumbnail src={a.foto} />
@@ -459,7 +471,7 @@ const InventarioLista = () => {
       ) : (
         /* VISTA DE TARJETAS */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtrados.map(a => {
+          {currentAnimales.map(a => {
             const ganancia = (a.pesoActual - a.pesoInicial).toFixed(1);
             return (
               <div key={a.id} className="bg-white rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col justify-between">
@@ -501,6 +513,32 @@ const InventarioLista = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Paginación */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border border-slate-100 rounded-2xl bg-white shadow-sm mt-6">
+          <p className="text-xs font-medium text-slate-500">
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filtrados.length)} de {filtrados.length} animales
+          </p>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+            <button 
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
 

@@ -1,11 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Pill, Plus, Trash2, Package, DollarSign, Activity } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Pill, Plus, Trash2, Package, DollarSign, Activity, ChevronLeft, ChevronRight } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
 
 const SanidadSistemas = () => {
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  const totalPages = Math.ceil(registros.length / itemsPerPage);
+  const currentRegistros = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return registros.slice(start, start + itemsPerPage);
+  }, [registros, currentPage, itemsPerPage]);
 
   const [nuevoReg, setNuevoReg] = useState({ 
     animalId: '',
@@ -202,38 +210,64 @@ const SanidadSistemas = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 font-bold">
-                 {registros.map(r => (
-                   <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
-                     <td className="px-10 py-6">
-                       <p className="font-black text-slate-800 text-sm uppercase tracking-tighter">{r.chapeta} - {r.medicamento}</p>
-                     </td>
-                     <td className="px-10 py-6 text-center">
-                       <span className="text-xl font-black text-slate-900">{r.dosis}</span>
-                       <span className="ml-1 text-[10px] text-slate-400 uppercase">{r.unidad || ''}</span>
-                     </td>
-                     <td className="px-10 py-6 text-center">
-                       {r.fecha}
-                     </td>
-                     <td className="px-10 py-6 text-center">
-                       {r.proximaDosis || '-'}
-                     </td>
-                     <td className="px-10 py-6 text-center">
-                       {r.observacion || '-'}
-                     </td>
-                     <td className="px-10 py-6 text-center">
-                       <button onClick={() => eliminarMed(r.id)} className="text-slate-200 hover:text-red-500 transition-colors">
-                         <Trash2 size={18} />
-                       </button>
-                     </td>
-                   </tr>
-                 ))}
-                 {registros.length === 0 && (
-                   <tr>
-                     <td colSpan="6" className="py-20 text-center text-slate-300 italic text-sm">No hay registros de sanidad.</td>
-                   </tr>
-                 )}
+                  {currentRegistros.map(r => (
+                    <tr key={r.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-10 py-6">
+                        <p className="font-black text-slate-800 text-sm uppercase tracking-tighter">{r.chapeta} - {r.medicamento}</p>
+                      </td>
+                      <td className="px-10 py-6 text-center">
+                        <span className="text-xl font-black text-slate-900">{r.dosis}</span>
+                        <span className="ml-1 text-[10px] text-slate-400 uppercase">{r.unidad || ''}</span>
+                      </td>
+                      <td className="px-10 py-6 text-center">
+                        {r.fecha}
+                      </td>
+                      <td className="px-10 py-6 text-center">
+                        {r.proximaDosis || '-'}
+                      </td>
+                      <td className="px-10 py-6 text-center">
+                        {r.observacion || '-'}
+                      </td>
+                      <td className="px-10 py-6 text-center">
+                        <button onClick={() => eliminarMed(r.id)} className="text-slate-200 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {registros.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="py-20 text-center text-slate-300 italic text-sm">No hay registros de sanidad.</td>
+                    </tr>
+                  )}
               </tbody>
             </table>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+                <p className="text-xs font-medium text-slate-500">
+                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, registros.length)} de {registros.length} registros
+                </p>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

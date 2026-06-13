@@ -3,7 +3,7 @@ import {
   Scale, TrendingUp, AlertCircle, Search, 
   DollarSign, ArrowUpRight, BarChart3, Target, RefreshCw,
   Layers, History, Calendar, LineChart as ChartIcon,
-  Milk, Droplets, Zap, Trash2, Edit3, X
+  Milk, Droplets, Zap, Trash2, Edit3, X, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getProduccion, crearProduccion, actualizarProduccion, eliminarProduccion, authenticatedFetch } from '../services/api';
@@ -17,6 +17,8 @@ const ProduccionSistemas = () => {
   const [cargando, setCargando] = useState(true);
   const [modo, setModo] = useState('peso'); 
   const [editandoId, setEditandoId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   const [registro, setRegistro] = useState({ 
     animalId: '', 
@@ -45,6 +47,16 @@ const ProduccionSistemas = () => {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  const totalPages = Math.ceil(registrosHistorial.length / itemsPerPage);
+  const currentRegistros = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return registrosHistorial.slice(start, start + itemsPerPage);
+  }, [registrosHistorial, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [modo]);
 
   // --- LÓGICA DE SELECCIÓN (CON VALIDACIÓN) ---
   const infoAnimalActual = useMemo(() => {
@@ -249,7 +261,7 @@ const ProduccionSistemas = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {registrosHistorial.map(p => (
+                    {currentRegistros.map(p => (
                       <tr key={p.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-8 py-5 text-xs font-bold text-slate-500">{new Date(p.fecha).toLocaleDateString()}</td>
                         <td className="px-8 py-5 font-black text-slate-800 uppercase tracking-tight">{p.chapeta}</td>
@@ -267,6 +279,32 @@ const ProduccionSistemas = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30 font-sans">
+                  <p className="text-xs font-medium text-slate-500">
+                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, registrosHistorial.length)} de {registrosHistorial.length} registros
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
            </div>
         </div>
       </div>

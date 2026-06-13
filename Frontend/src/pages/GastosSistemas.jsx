@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, Search, Trash2, Edit3, LayoutGrid, List, X, FileText, BadgeDollarSign, CalendarDays, TrendingUp, PieChart } from 'lucide-react';
+import { Plus, Search, Trash2, Edit3, LayoutGrid, List, X, FileText, BadgeDollarSign, CalendarDays, TrendingUp, PieChart, ChevronLeft, ChevronRight } from 'lucide-react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import ExpensesChart from '../components/ExpensesChart';
@@ -11,6 +11,8 @@ const GastosSistemas = () => {
   
   // Filtros
   const [busqueda, setBusqueda] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const [filtroCategoria, setFiltroCategoria] = useState('TODOS');
   
   // Por defecto, este mes
@@ -64,6 +66,16 @@ const GastosSistemas = () => {
       return cumpleCategoria && cumpleBusqueda;
     });
   }, [gastos, filtroCategoria, busqueda]);
+
+  const totalPages = Math.ceil(gastosFiltrados.length / itemsPerPage);
+  const currentGastos = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return gastosFiltrados.slice(start, start + itemsPerPage);
+  }, [gastosFiltrados, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda, filtroCategoria, fechaDesde, fechaHasta]);
 
   // KPIs
   const totalEgresos = useMemo(() => gastosFiltrados.reduce((acc, g) => acc + (parseFloat(g.monto) || 0), 0), [gastosFiltrados]);
@@ -282,7 +294,7 @@ const GastosSistemas = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {gastosFiltrados.map(g => (
+                    {currentGastos.map(g => (
                       <tr key={g.id} className="hover:bg-slate-50/40 transition-colors">
                         <td className="px-8 py-5 font-bold text-slate-500 text-xs">{new Date(g.fecha).toLocaleDateString()}</td>
                         <td className="px-6 py-5 font-black uppercase text-slate-900 text-sm">{g.concepto}</td>
@@ -302,7 +314,7 @@ const GastosSistemas = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {gastosFiltrados.map(g => (
+              {currentGastos.map(g => (
                 <div key={g.id} className="bg-white rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-100 overflow-hidden flex flex-col justify-between">
                   <div className="p-6 pb-4">
                     <div className="flex justify-between items-start mb-4">
@@ -323,6 +335,32 @@ const GastosSistemas = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border border-slate-100 rounded-2xl bg-white shadow-sm mt-6">
+              <p className="text-xs font-medium text-slate-500">
+                Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, gastosFiltrados.length)} de {gastosFiltrados.length} egresos
+              </p>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
           )}
         </div>

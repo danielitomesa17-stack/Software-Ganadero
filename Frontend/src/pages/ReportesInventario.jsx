@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Download, Filter, BarChart3 } from 'lucide-react';
+import { Download, Filter, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { authenticatedFetch } from '../services/api';
 import { parseDateString } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
@@ -10,6 +10,8 @@ const ReportesInventario = () => {
   const [cargando, setCargando] = useState(true);
   const [filtroLote, setFiltroLote] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Cargar animales
   React.useEffect(() => {
@@ -61,6 +63,16 @@ const ReportesInventario = () => {
       return { ...a, gdp: Number(gdp), progreso };
     });
   }, [animalesFiltrados]);
+
+  const totalPages = Math.ceil(animalesConAnalisis.length / itemsPerPage);
+  const currentAnimales = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return animalesConAnalisis.slice(start, start + itemsPerPage);
+  }, [animalesConAnalisis, currentPage, itemsPerPage]);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [filtroLote, filtroEstado]);
 
   // Estadísticas generales
   const estadisticas = useMemo(() => {
@@ -234,8 +246,8 @@ const ReportesInventario = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {animalesConAnalisis.length > 0 ? (
-                animalesConAnalisis.map(a => (
+              {currentAnimales.length > 0 ? (
+                currentAnimales.map(a => (
                   <tr key={a.id} className="hover:bg-slate-50/40 transition-colors">
                     <td className="px-6 py-4 font-black uppercase text-slate-900">{a.chapeta}</td>
                     <td className="px-6 py-4 text-slate-600 text-sm">{a.raza}</td>
@@ -280,6 +292,32 @@ const ReportesInventario = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+            <p className="text-xs font-medium text-slate-500">
+              Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, animalesConAnalisis.length)} de {animalesConAnalisis.length} animales
+            </p>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

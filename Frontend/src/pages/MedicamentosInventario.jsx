@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getMedicamentos, crearMedicamento, eliminarMedicamento, actualizarMedicamento } from '../services/api';
-import { Pill, Plus, Trash2, AlertCircle, Package, Search, DollarSign, Edit3, TrendingDown, Clock, AlertTriangle, Eye, Loader } from 'lucide-react';
+import { Pill, Plus, Trash2, AlertCircle, Package, Search, DollarSign, Edit3, TrendingDown, Clock, AlertTriangle, Eye, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MedicamentosInventario = () => {
   const [medicamentos, setMedicamentos] = useState([]);
@@ -21,6 +21,8 @@ const MedicamentosInventario = () => {
   const [editandoId, setEditandoId] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [historial, setHistorial] = useState([]);
   const [vista, setVista] = useState('inventario'); // 'inventario', 'alertas', 'historial'
@@ -174,11 +176,23 @@ const MedicamentosInventario = () => {
     }
   };
 
-  const medicamentosFiltrados = medicamentos.filter((m) => {
-    const matchBusqueda = m.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const matchCategoria = !filtroCategoria || m.categoria === filtroCategoria;
-    return matchBusqueda && matchCategoria;
-  });
+  const medicamentosFiltrados = useMemo(() => {
+    return medicamentos.filter((m) => {
+      const matchBusqueda = m.nombre.toLowerCase().includes(busqueda.toLowerCase());
+      const matchCategoria = !filtroCategoria || m.categoria === filtroCategoria;
+      return matchBusqueda && matchCategoria;
+    });
+  }, [medicamentos, busqueda, filtroCategoria]);
+
+  const totalPages = Math.ceil(medicamentosFiltrados.length / itemsPerPage);
+  const currentMedicamentos = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return medicamentosFiltrados.slice(start, start + itemsPerPage);
+  }, [medicamentosFiltrados, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [busqueda, filtroCategoria]);
 
   const tieneAlerta = (med) => {
     return (med.stock <= (med.stock_minimo || 10)) ||
@@ -361,7 +375,7 @@ const MedicamentosInventario = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {medicamentosFiltrados.map((m) => (
+                    {currentMedicamentos.map((m) => (
                       <tr key={m.id} className={`hover:bg-slate-50 ${tieneAlerta(m) ? 'bg-red-50/30' : ''}`}>
                         <td className="px-6 py-4">
                           <div className="font-black text-slate-900">{m.nombre}</div>
@@ -408,6 +422,32 @@ const MedicamentosInventario = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Paginación */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+                  <p className="text-xs font-medium text-slate-500">
+                    Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, medicamentosFiltrados.length)} de {medicamentosFiltrados.length} medicamentos
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span className="text-xs font-bold text-slate-700 w-8 text-center">{currentPage}</span>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-slate-600"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
