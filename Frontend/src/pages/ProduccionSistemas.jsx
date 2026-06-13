@@ -3,8 +3,9 @@ import {
   Scale, TrendingUp, AlertCircle, Search, 
   DollarSign, ArrowUpRight, BarChart3, Target, RefreshCw,
   Layers, History, Calendar, LineChart as ChartIcon,
-  Milk, Droplets, Zap, Trash2, Edit3, X, ChevronLeft, ChevronRight
+  Milk, Droplets, Zap, Trash2, Edit3, X, ChevronLeft, ChevronRight, ArrowLeft
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getProduccion, crearProduccion, actualizarProduccion, eliminarProduccion, authenticatedFetch } from '../services/api';
 
@@ -12,6 +13,7 @@ const PESO_OBJETIVO = 450;
 const PRECIO_KILO_ESTIMADO = 8500;
 
 const ProduccionSistemas = () => {
+  const navigate = useNavigate();
   const [animales, setAnimales] = useState([]);
   const [registrosHistorial, setRegistrosHistorial] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -173,14 +175,19 @@ const ProduccionSistemas = () => {
              <span className="bg-green-100 text-green-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Estado: Online</span>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Carga Completa</p>
-              <p className="text-2xl font-black text-slate-900">{animales.length} Animales</p>
-            </div>
-            <button onClick={cargarDatos} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-blue-500 transition-all">
-              <RefreshCw size={20} />
-            </button>
+        <div className="flex items-center gap-4">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Carga Completa</p>
+                <p className="text-2xl font-black text-slate-900">{animales.length} Animales</p>
+              </div>
+              <button onClick={cargarDatos} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-blue-500 transition-all">
+                <RefreshCw size={20} />
+              </button>
+          </div>
+          <button onClick={() => navigate('/app/inventario')} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10">
+            <ArrowLeft size={16} /> Volver
+          </button>
         </div>
       </header>
 

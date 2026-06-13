@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Download, Filter, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Filter, BarChart3, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../services/api';
 import { parseDateString } from '../utils/dateUtils';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const ReportesInventario = () => {
+  const navigate = useNavigate();
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [filtroLote, setFiltroLote] = useState('');
@@ -159,11 +161,14 @@ const ReportesInventario = () => {
   return (
     <div className="p-4 sm:p-8 bg-[#F8FAFC]">
       {/* HEADER */}
-      <div className="mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-black uppercase tracking-tighter text-slate-900">Reportes de Inventario</h1>
           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest italic">Análisis y exportación de datos</p>
         </div>
+        <button onClick={() => navigate('/app/inventario')} className="flex items-center gap-2 bg-slate-900 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10">
+          <ArrowLeft size={16} /> Volver a Inventario
+        </button>
       </div>
 
       {/* ESTADÍSTICAS */}

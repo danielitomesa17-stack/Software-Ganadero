@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp, ChevronLeft, ChevronRight
+  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp, ChevronLeft, ChevronRight, BarChart3, Milk
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../services/api';
 import GraficoGananciaAnimal from '../components/GraficoGananciaAnimal';
 import AnimalAnalytics from '../components/AnimalAnalytics';
@@ -35,6 +36,7 @@ const parseHistorialSeguro = (historial) => {
 };
 
 const InventarioLista = () => {
+  const navigate = useNavigate();
   const [animales, setAnimales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
@@ -401,6 +403,12 @@ const InventarioLista = () => {
           <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest italic">Registros en producción real</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <button onClick={() => navigate('/app/reportes-inventario')} className="flex-1 sm:flex-none bg-blue-600 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/10" title="Ver Reportes">
+            <BarChart3 size={18} className="inline mr-2"/> Reportes
+          </button>
+          <button onClick={() => navigate('/app/ProduccionSistemas')} className="flex-1 sm:flex-none bg-purple-600 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/10" title="Registros de Producción">
+            <Milk size={18} className="inline mr-2"/> Producción
+          </button>
           <button onClick={() => setVistaTabular(!vistaTabular)} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all text-slate-600">
             {vistaTabular ? <LayoutGrid size={20}/> : <List size={20}/>}
           </button>
