@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import gastoRoutes from './routes/gastoRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import sanidadRoutes from './routes/sanidadRoutes.js';
+import aforoRoutes from './routes/aforoRoutes.js';
 
 import { verificarToken } from './middlewares/authMiddlewares.js';
 
@@ -27,6 +28,7 @@ app.use(express.json());
 app.use('/api/gastos', verificarToken, gastoRoutes);
 app.use('/api/medicamentos', verificarToken, medicamentoRoutes);
 app.use('/api/sanidad', verificarToken, sanidadRoutes);
+app.use('/api/aforos', verificarToken, aforoRoutes);
 
 // Rutas Públicas (Login/Registro)
 app.use('/api/auth', authRoutes); 

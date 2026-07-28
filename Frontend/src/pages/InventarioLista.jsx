@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp, ChevronLeft, ChevronRight, BarChart3, Milk
+  Plus, Search, Trash2, Edit3, Eye, LayoutGrid, List, X, History, Camera, TrendingUp, ChevronLeft, ChevronRight, BarChart3, Milk, Map, Sprout
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../services/api';
@@ -408,6 +408,9 @@ const InventarioLista = () => {
           </button>
           <button onClick={() => navigate('/app/ProduccionSistemas')} className="flex-1 sm:flex-none bg-purple-600 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase hover:bg-purple-700 transition-all shadow-lg shadow-purple-600/10" title="Registros de Producción">
             <Milk size={18} className="inline mr-2"/> Producción
+          </button>
+          <button onClick={() => navigate('/app/aforos')} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-4 rounded-2xl font-black text-xs uppercase hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/10" title="Aforo de Potreros">
+            <Sprout size={18} className="inline mr-2"/> Aforos
           </button>
           <button onClick={() => setVistaTabular(!vistaTabular)} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 transition-all text-slate-600">
             {vistaTabular ? <LayoutGrid size={20}/> : <List size={20}/>}

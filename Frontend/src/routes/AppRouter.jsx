@@ -15,6 +15,7 @@ import ReportesSistemas from '../pages/ReportesSistemas';
 import ReportesInventario from '../pages/ReportesInventario';
 import GastosSistemas from '../pages/GastosSistemas';
 import PanelAdmin from '../pages/PanelAdmin'; // Módulo independiente
+import AforosLista from '../pages/AforosLista';
 
 const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
   const location = useLocation();
@@ -173,6 +174,7 @@ const NavContent = ({ sidebarOpen, setSidebarOpen, sesion, onLogout }) => {
               <Route path="SanidadSistemas" element={<SanidadSistemas />} />
               <Route path="MedicamentosInventario" element={<MedicamentosInventario />} />
               <Route path="gastos" element={<GastosSistemas />} />
+              <Route path="aforos" element={<AforosLista />} />
               {/* RUTA PROTEGIDA PARA ADMIN */}
               <Route 
                 path="admin" 
